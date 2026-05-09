@@ -1,6 +1,6 @@
 # Pre-Deployment Detection of Terraform Security Misconfigurations Using Machine Learning
 
-A tool that scans Terraform `.tf` files and classifies each resource block as **Low**, **Medium**, or **High** security risk — before anything gets deployed.
+A tool that scans Terraform `.tf` files and classifies each resource block as **Low**, **Medium**, or **High** security risk - before anything gets deployed.
 
 ---
 
@@ -91,9 +91,9 @@ Each answer is a 1 or 0. The block becomes a row of 17 numbers.
 
 Three classifiers were trained and compared:
 
-- **RandomForest** — 100 decision trees voting together. Primary model used for predictions. Outputs confidence scores per class.
-- **DecisionTree** — single tree, simpler and more interpretable.
-- **LogisticRegression** — linear baseline to compare against the tree-based models.
+- **RandomForest** - 100 decision trees voting together. Primary model used for predictions. Outputs confidence scores per class.
+- **DecisionTree** - single tree, simpler and more interpretable.
+- **LogisticRegression** - linear baseline to compare against the tree-based models.
 
 All models use `class_weight='balanced'` and are evaluated with 5-fold cross-validation.
 
