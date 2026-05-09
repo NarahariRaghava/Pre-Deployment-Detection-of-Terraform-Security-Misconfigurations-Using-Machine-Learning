@@ -30,9 +30,9 @@ It also generates a colour-coded HTML report you can open in a browser.
 
 ## How It Works
 
-**1. Read the file** — the tool parses the `.tf` file and splits it into individual resource blocks.
+**1. Read the file** - the tool parses the `.tf` file and splits it into individual resource blocks.
 
-**2. Extract features** — each block gets checked against 17 security questions using regex:
+**2. Extract features** - each block gets checked against 17 security questions using regex:
 - Is `0.0.0.0/0` present?
 - Is port 22 or 3389 open?
 - Is the database publicly accessible?
@@ -42,9 +42,9 @@ It also generates a colour-coded HTML report you can open in a browser.
 
 Each answer is a 1 or 0. The block becomes a row of 17 numbers.
 
-**3. Classify** — that row of numbers goes into a trained RandomForest model which outputs Low, Medium, or High along with a confidence score.
+**3. Classify** - that row of numbers goes into a trained RandomForest model which outputs Low, Medium, or High along with a confidence score.
 
-**4. Explain** — whichever features fired get turned into a plain English reason.
+**4. Explain** - whichever features fired get turned into a plain English reason.
 
 ---
 
