@@ -1,7 +1,8 @@
 """
-Trains RandomForest and DecisionTree classifiers on the extracted feature set,
-evaluates them, and saves all outputs (metrics JSON, confusion matrix image,
-feature importance chart) to the outputs/ folder.
+Trains RandomForest, DecisionTree, and LogisticRegression classifiers on the
+extracted feature set, evaluates them with cross-validation, and saves all
+outputs (metrics JSON, confusion matrix images, feature importance charts)
+to the outputs/ folder.
 """
 
 import json
@@ -16,20 +17,20 @@ import seaborn as sns
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import (
     accuracy_score,
     classification_report,
     confusion_matrix,
-    ConfusionMatrixDisplay,
 )
 from sklearn.preprocessing import LabelEncoder
 
 from src.feature_extractor import extract_features
 
-LABEL_ORDER = ["Low", "Medium", "High"]
-OUTPUTS_DIR = os.path.join(os.path.dirname(__file__), "..", "outputs")
-MODELS_DIR  = os.path.join(os.path.dirname(__file__), "..", "outputs", "models")
+LABEL_ORDER  = ["Low", "Medium", "High"]
+OUTPUTS_DIR  = os.path.join(os.path.dirname(__file__), "..", "outputs")
+MODELS_DIR   = os.path.join(os.path.dirname(__file__), "..", "outputs", "models")
 
 
 def _load_features(df: pd.DataFrame):
@@ -44,10 +45,17 @@ def train_and_evaluate(df: pd.DataFrame, test_size: float = 0.25, random_state: 
     """
     Full training + evaluation pipeline.
 
+    Steps:
+    1. Extract features from every snippet.
+    2. Train RandomForest, DecisionTree, and LogisticRegression.
+    3. Evaluate each model on the held-out test set.
+    4. Run 5-fold cross-validation for a more reliable accuracy estimate.
+    5. Save confusion matrix, feature importance chart, model files, and reports.
+
     Parameters
     ----------
-    df : DataFrame with columns terraform_snippet, risk_label
-    test_size : fraction of data held out for testing
+    df           : DataFrame with columns terraform_snippet, risk_label
+    test_size    : fraction of data held out for testing (default 25%)
     random_state : seed for reproducibility
 
     Returns
@@ -55,11 +63,10 @@ def train_and_evaluate(df: pd.DataFrame, test_size: float = 0.25, random_state: 
     dict mapping model name -> trained sklearn estimator
     """
     os.makedirs(OUTPUTS_DIR, exist_ok=True)
-    os.makedirs(MODELS_DIR, exist_ok=True)
+    os.makedirs(MODELS_DIR,  exist_ok=True)
 
     X, y = _load_features(df)
 
-    # Encode labels to integers for sklearn (keeps string labels for display)
     le = LabelEncoder()
     le.fit(LABEL_ORDER)
     y_enc = le.transform(y)
@@ -69,21 +76,28 @@ def train_and_evaluate(df: pd.DataFrame, test_size: float = 0.25, random_state: 
     )
 
     models = {
+        # class_weight='balanced' adjusts for real-world class imbalance
         "RandomForest": RandomForestClassifier(
-            n_estimators=100, max_depth=8, random_state=random_state
+            n_estimators=100, max_depth=8,
+            class_weight="balanced", random_state=random_state
         ),
         "DecisionTree": DecisionTreeClassifier(
-            max_depth=6, random_state=random_state
+            max_depth=6,
+            class_weight="balanced", random_state=random_state
+        ),
+        # LogisticRegression as a linear baseline for comparison
+        "LogisticRegression": LogisticRegression(
+            max_iter=1000,
+            class_weight="balanced", random_state=random_state
         ),
     }
 
     all_metrics = {}
-    # Accumulate plain-text lines for the human-readable report
     text_lines = [
         "Terraform Security Misconfiguration Detector – Evaluation Report",
         "=" * 65,
         f"Dataset size : {len(df)} rows  |  Test fraction : {test_size}",
-        f"Random state : {random_state}",
+        f"Features     : {X.shape[1]}  |  Random state : {random_state}",
         "",
     ]
 
@@ -91,106 +105,100 @@ def train_and_evaluate(df: pd.DataFrame, test_size: float = 0.25, random_state: 
         clf.fit(X_train, y_train)
         y_pred = clf.predict(X_test)
 
-        acc = accuracy_score(y_test, y_pred)
-        # output_dict=True for JSON; text version printed separately
+        acc         = accuracy_score(y_test, y_pred)
         report_dict = classification_report(
-            y_test, y_pred,
-            target_names=le.classes_,
-            output_dict=True,
+            y_test, y_pred, target_names=le.classes_, output_dict=True
         )
         report_text = classification_report(y_test, y_pred, target_names=le.classes_)
 
+        # 5-fold cross-validation on the full dataset for a stable accuracy estimate
+        cv_scores = cross_val_score(clf, X, y_enc, cv=5, scoring="accuracy")
+
         all_metrics[name] = {
-            "accuracy": round(acc, 4),
+            "accuracy":              round(acc, 4),
+            "cv_mean_accuracy":      round(cv_scores.mean(), 4),
+            "cv_std":                round(cv_scores.std(), 4),
             "classification_report": report_dict,
         }
 
-        print(f"\n{'='*50}")
-        print(f"Model: {name}")
-        print(f"Accuracy: {acc:.4f}")
+        print(f"\n{'='*55}")
+        print(f"Model    : {name}")
+        print(f"Accuracy : {acc:.4f}  |  CV (5-fold): {cv_scores.mean():.4f} ± {cv_scores.std():.4f}")
         print(report_text)
 
-        # Append to plain-text report
         text_lines += [
-            f"Model : {name}",
+            f"Model    : {name}",
             f"Accuracy : {acc:.4f}",
+            f"CV (5-fold mean ± std) : {cv_scores.mean():.4f} ± {cv_scores.std():.4f}",
             report_text,
             "-" * 65,
             "",
         ]
 
-        # Confusion matrix image
         _save_confusion_matrix(y_test, y_pred, le.classes_, name)
-
-        # Feature importance chart (only for tree-based models)
         _save_feature_importance(clf, X.columns.tolist(), name)
 
-        # Persist the trained model bundle for the predictor module
-        model_path = os.path.join(MODELS_DIR, f"{name.lower()}.joblib")
+        model_path = os.path.join(MODELS_DIR, f"{name.lower().replace(' ', '_')}.joblib")
         joblib.dump(
             {"model": clf, "label_encoder": le, "feature_names": X.columns.tolist()},
             model_path,
         )
-        print(f"Model saved to {model_path}")
+        print(f"Model saved → {model_path}")
 
-    # Write combined metrics as JSON (machine-readable)
+    # JSON report
     json_path = os.path.join(OUTPUTS_DIR, "evaluation_report.json")
     with open(json_path, "w") as f:
         json.dump(all_metrics, f, indent=2)
-    print(f"\nEvaluation report (JSON) saved to {json_path}")
+    print(f"\nEvaluation report (JSON) → {json_path}")
 
-    # Write the same metrics as plain text (human-readable, easy to paste into reports)
+    # Plain-text report
     txt_path = os.path.join(OUTPUTS_DIR, "evaluation_report.txt")
     with open(txt_path, "w") as f:
         f.write("\n".join(text_lines))
-    print(f"Evaluation report (text) saved to {txt_path}")
+    print(f"Evaluation report (text) → {txt_path}")
 
     return models
 
 
 def _save_confusion_matrix(y_true, y_pred, labels, model_name: str):
-    cm = confusion_matrix(y_true, y_pred)
+    cm  = confusion_matrix(y_true, y_pred)
     fig, ax = plt.subplots(figsize=(6, 5))
     sns.heatmap(
-        cm,
-        annot=True,
-        fmt="d",
-        cmap="Blues",
-        xticklabels=labels,
-        yticklabels=labels,
-        ax=ax,
+        cm, annot=True, fmt="d", cmap="Blues",
+        xticklabels=labels, yticklabels=labels, ax=ax,
     )
     ax.set_xlabel("Predicted Label")
     ax.set_ylabel("True Label")
     ax.set_title(f"Confusion Matrix – {model_name}")
-    path = os.path.join(OUTPUTS_DIR, f"confusion_matrix_{model_name.lower()}.png")
+    path = os.path.join(OUTPUTS_DIR, f"confusion_matrix_{model_name.lower().replace(' ', '_')}.png")
     fig.tight_layout()
     fig.savefig(path, dpi=150)
     plt.close(fig)
-    print(f"Confusion matrix saved to {path}")
+    print(f"Confusion matrix → {path}")
 
 
 def _save_feature_importance(clf, feature_names: list, model_name: str):
-    if not hasattr(clf, "feature_importances_"):
+    """Saves feature importance for tree models; uses |coef| for linear models."""
+    if hasattr(clf, "feature_importances_"):
+        importances = clf.feature_importances_
+    elif hasattr(clf, "coef_"):
+        # For LogisticRegression, use mean absolute coefficient across classes
+        importances = np.abs(clf.coef_).mean(axis=0)
+    else:
         return
-    importances = clf.feature_importances_
-    indices = np.argsort(importances)[::-1]
 
-    fig, ax = plt.subplots(figsize=(9, 5))
-    ax.bar(
-        range(len(feature_names)),
-        importances[indices],
-        color="steelblue",
-        edgecolor="black",
-    )
+    indices = np.argsort(importances)[::-1]
+    fig, ax = plt.subplots(figsize=(11, 5))
+    ax.bar(range(len(feature_names)), importances[indices],
+           color="steelblue", edgecolor="black")
     ax.set_xticks(range(len(feature_names)))
     ax.set_xticklabels(
-        [feature_names[i] for i in indices], rotation=40, ha="right", fontsize=9
+        [feature_names[i] for i in indices], rotation=45, ha="right", fontsize=8
     )
     ax.set_ylabel("Importance")
     ax.set_title(f"Feature Importances – {model_name}")
-    path = os.path.join(OUTPUTS_DIR, f"feature_importance_{model_name.lower()}.png")
+    path = os.path.join(OUTPUTS_DIR, f"feature_importance_{model_name.lower().replace(' ', '_')}.png")
     fig.tight_layout()
     fig.savefig(path, dpi=150)
     plt.close(fig)
-    print(f"Feature importance chart saved to {path}")
+    print(f"Feature importance  → {path}")

@@ -4,9 +4,9 @@
     "snippet": "resource \"aws_security_group\" \"bad_sg\" {\n  ingress {\n    from_port   = 22\n    to_port     = 22\n    protocol    = \"tcp\"\n    cidr_blocks = [\"0.0.0.0/0\"]\n  }\n}",
     "risk_level": "High",
     "probabilities": {
-      "High": 1.0,
-      "Low": 0.0,
-      "Medium": 0.0
+      "High": 0.9364,
+      "Low": 0.0231,
+      "Medium": 0.0406
     },
     "reason": "CIDR range is open to the entire internet (0.0.0.0/0); SSH (port 22) is exposed.",
     "features": {
@@ -19,6 +19,13 @@
       "has_wildcard_iam_action": 0,
       "has_wildcard_iam_resource": 0,
       "has_s3_public_risk": 0,
+      "has_ipv6_open_cidr": 0,
+      "has_hardcoded_secret": 0,
+      "has_variable_security_ref": 0,
+      "has_public_ip_assigned": 0,
+      "has_http_listener": 0,
+      "has_cloudtrail_disabled": 0,
+      "has_unencrypted_ebs": 0,
       "count_sensitive_indicators": 2
     }
   },
@@ -27,9 +34,9 @@
     "snippet": "resource \"aws_iam_policy\" \"admin\" {\n  policy = jsonencode({\n    Statement = [{\n      Effect   = \"Allow\"\n      Action   = \"*\"\n      Resource = \"*\"\n    }]\n  })\n}",
     "risk_level": "High",
     "probabilities": {
-      "High": 0.9846,
-      "Low": 0.0,
-      "Medium": 0.0154
+      "High": 0.9753,
+      "Low": 0.0056,
+      "Medium": 0.0192
     },
     "reason": "IAM action is a wildcard (*); IAM resource is a wildcard (*).",
     "features": {
@@ -42,7 +49,44 @@
       "has_wildcard_iam_action": 1,
       "has_wildcard_iam_resource": 1,
       "has_s3_public_risk": 0,
+      "has_ipv6_open_cidr": 0,
+      "has_hardcoded_secret": 0,
+      "has_variable_security_ref": 0,
+      "has_public_ip_assigned": 0,
+      "has_http_listener": 0,
+      "has_cloudtrail_disabled": 0,
+      "has_unencrypted_ebs": 0,
       "count_sensitive_indicators": 2
+    }
+  },
+  {
+    "demo_label": "High Risk \u2013 Lambda hardcoded credentials",
+    "snippet": "resource \"aws_lambda_function\" \"insecure\" {\n  filename      = \"function.zip\"\n  function_name = \"insecure-fn\"\n  role          = aws_iam_role.fn_role.arn\n  handler       = \"index.handler\"\n  runtime       = \"python3.11\"\n  environment {\n    variables = {\n      password  = \"hardcoded_db_pass_123\"\n      api_token = \"hardcoded_token_value\"\n    }\n  }\n}",
+    "risk_level": "High",
+    "probabilities": {
+      "High": 0.6571,
+      "Low": 0.0972,
+      "Medium": 0.2457
+    },
+    "reason": "hardcoded secret/password detected in plain text.",
+    "features": {
+      "has_open_cidr": 0,
+      "has_ssh_open": 0,
+      "has_rdp_open": 0,
+      "has_db_port_open": 0,
+      "has_public_database": 0,
+      "has_encryption_disabled": 0,
+      "has_wildcard_iam_action": 0,
+      "has_wildcard_iam_resource": 0,
+      "has_s3_public_risk": 0,
+      "has_ipv6_open_cidr": 0,
+      "has_hardcoded_secret": 1,
+      "has_variable_security_ref": 0,
+      "has_public_ip_assigned": 0,
+      "has_http_listener": 0,
+      "has_cloudtrail_disabled": 0,
+      "has_unencrypted_ebs": 0,
+      "count_sensitive_indicators": 1
     }
   },
   {
@@ -50,9 +94,9 @@
     "snippet": "resource \"aws_db_instance\" \"semi\" {\n  engine              = \"mysql\"\n  instance_class      = \"db.t3.micro\"\n  publicly_accessible = true\n  storage_encrypted   = true\n}",
     "risk_level": "Medium",
     "probabilities": {
-      "High": 0.0266,
-      "Low": 0.0454,
-      "Medium": 0.928
+      "High": 0.1314,
+      "Low": 0.1044,
+      "Medium": 0.7643
     },
     "reason": "the database is publicly accessible.",
     "features": {
@@ -65,6 +109,43 @@
       "has_wildcard_iam_action": 0,
       "has_wildcard_iam_resource": 0,
       "has_s3_public_risk": 0,
+      "has_ipv6_open_cidr": 0,
+      "has_hardcoded_secret": 0,
+      "has_variable_security_ref": 0,
+      "has_public_ip_assigned": 0,
+      "has_http_listener": 0,
+      "has_cloudtrail_disabled": 0,
+      "has_unencrypted_ebs": 0,
+      "count_sensitive_indicators": 1
+    }
+  },
+  {
+    "demo_label": "Medium Risk \u2013 EC2 public IP assigned",
+    "snippet": "resource \"aws_instance\" \"public_ec2\" {\n  ami                         = \"ami-0c55b159cbfafe1f0\"\n  instance_type               = \"t2.micro\"\n  associate_public_ip_address = true\n  ebs_block_device {\n    device_name = \"/dev/sda1\"\n    encrypted   = true\n  }\n}",
+    "risk_level": "Medium",
+    "probabilities": {
+      "High": 0.1921,
+      "Low": 0.1039,
+      "Medium": 0.7039
+    },
+    "reason": "EC2 instance is assigned a public IP address.",
+    "features": {
+      "has_open_cidr": 0,
+      "has_ssh_open": 0,
+      "has_rdp_open": 0,
+      "has_db_port_open": 0,
+      "has_public_database": 0,
+      "has_encryption_disabled": 0,
+      "has_wildcard_iam_action": 0,
+      "has_wildcard_iam_resource": 0,
+      "has_s3_public_risk": 0,
+      "has_ipv6_open_cidr": 0,
+      "has_hardcoded_secret": 0,
+      "has_variable_security_ref": 0,
+      "has_public_ip_assigned": 1,
+      "has_http_listener": 0,
+      "has_cloudtrail_disabled": 0,
+      "has_unencrypted_ebs": 0,
       "count_sensitive_indicators": 1
     }
   },
@@ -73,9 +154,9 @@
     "snippet": "resource \"aws_db_instance\" \"safe\" {\n  engine                  = \"postgres\"\n  instance_class          = \"db.m5.large\"\n  publicly_accessible     = false\n  storage_encrypted       = true\n  multi_az                = true\n  deletion_protection     = true\n  backup_retention_period = 30\n}",
     "risk_level": "Low",
     "probabilities": {
-      "High": 0.0006,
-      "Low": 0.7679,
-      "Medium": 0.2315
+      "High": 0.006,
+      "Low": 0.7311,
+      "Medium": 0.2628
     },
     "reason": "No high-risk indicators detected.",
     "features": {
@@ -88,6 +169,13 @@
       "has_wildcard_iam_action": 0,
       "has_wildcard_iam_resource": 0,
       "has_s3_public_risk": 0,
+      "has_ipv6_open_cidr": 0,
+      "has_hardcoded_secret": 0,
+      "has_variable_security_ref": 0,
+      "has_public_ip_assigned": 0,
+      "has_http_listener": 0,
+      "has_cloudtrail_disabled": 0,
+      "has_unencrypted_ebs": 0,
       "count_sensitive_indicators": 0
     }
   },
@@ -96,9 +184,9 @@
     "snippet": "resource \"aws_s3_bucket\" \"private\" {\n  bucket = \"company-private-data\"\n}\nresource \"aws_s3_bucket_public_access_block\" \"block\" {\n  bucket                  = aws_s3_bucket.private.id\n  block_public_acls       = true\n  block_public_policy     = true\n  ignore_public_acls      = true\n  restrict_public_buckets = true\n}",
     "risk_level": "Low",
     "probabilities": {
-      "High": 0.0006,
-      "Low": 0.7679,
-      "Medium": 0.2315
+      "High": 0.006,
+      "Low": 0.7311,
+      "Medium": 0.2628
     },
     "reason": "No high-risk indicators detected.",
     "features": {
@@ -111,6 +199,13 @@
       "has_wildcard_iam_action": 0,
       "has_wildcard_iam_resource": 0,
       "has_s3_public_risk": 0,
+      "has_ipv6_open_cidr": 0,
+      "has_hardcoded_secret": 0,
+      "has_variable_security_ref": 0,
+      "has_public_ip_assigned": 0,
+      "has_http_listener": 0,
+      "has_cloudtrail_disabled": 0,
+      "has_unencrypted_ebs": 0,
       "count_sensitive_indicators": 0
     }
   }

@@ -1,64 +1,64 @@
-Terraform Security Scan – data/sample_tf/example.tf
+Terraform Security Scan – data/sample_tf/
 =================================================================
 
 Resource : aws_security_group.open_ssh
-File     : data/sample_tf/example.tf
+File     : example.tf
 Risk     : High
 Confidence: High: 94%  |  Low: 2%  |  Medium: 4%
 Reason   : CIDR range is open to the entire internet (0.0.0.0/0); SSH (port 22) is exposed.
 -----------------------------------------------------------------
 
 Resource : aws_iam_policy.admin_policy
-File     : data/sample_tf/example.tf
+File     : example.tf
 Risk     : High
 Confidence: High: 98%  |  Low: 1%  |  Medium: 2%
 Reason   : IAM action is a wildcard (*); IAM resource is a wildcard (*).
 -----------------------------------------------------------------
 
 Resource : aws_db_instance.unsafe_db
-File     : data/sample_tf/example.tf
+File     : example.tf
 Risk     : High
 Confidence: High: 100%  |  Low: 0%  |  Medium: 0%
 Reason   : the database is publicly accessible; RDS storage encryption is disabled; hardcoded secret/password detected in plain text.
 -----------------------------------------------------------------
 
 Resource : aws_s3_bucket.app_logs
-File     : data/sample_tf/example.tf
+File     : example.tf
 Risk     : Low
 Confidence: High: 1%  |  Low: 73%  |  Medium: 26%
 Reason   : No high-risk indicators detected.
 -----------------------------------------------------------------
 
 Resource : aws_db_instance.reporting_db
-File     : data/sample_tf/example.tf
+File     : example.tf
 Risk     : Medium
 Confidence: High: 13%  |  Low: 10%  |  Medium: 76%
 Reason   : the database is publicly accessible.
 -----------------------------------------------------------------
 
 Resource : aws_s3_bucket.private_data
-File     : data/sample_tf/example.tf
+File     : example.tf
 Risk     : Low
 Confidence: High: 1%  |  Low: 73%  |  Medium: 26%
 Reason   : No high-risk indicators detected.
 -----------------------------------------------------------------
 
 Resource : aws_s3_bucket_public_access_block.private_data_block
-File     : data/sample_tf/example.tf
+File     : example.tf
 Risk     : Low
 Confidence: High: 1%  |  Low: 73%  |  Medium: 26%
 Reason   : No high-risk indicators detected.
 -----------------------------------------------------------------
 
 Resource : aws_iam_policy.readonly_s3
-File     : data/sample_tf/example.tf
+File     : example.tf
 Risk     : Low
 Confidence: High: 1%  |  Low: 73%  |  Medium: 26%
 Reason   : No high-risk indicators detected.
 -----------------------------------------------------------------
 
 Resource : aws_db_instance.secure_db
-File     : data/sample_tf/example.tf
+File     : example.tf
 Risk     : Low
 Confidence: High: 1%  |  Low: 73%  |  Medium: 26%
 Reason   : No high-risk indicators detected.

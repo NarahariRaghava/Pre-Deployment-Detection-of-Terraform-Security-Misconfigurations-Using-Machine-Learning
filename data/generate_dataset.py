@@ -1,6 +1,7 @@
 """
 Generates a synthetic dataset of Terraform snippets labeled by security risk level.
-Covers: aws_security_group, aws_s3_bucket, aws_iam_policy, aws_db_instance.
+Covers: aws_security_group, aws_s3_bucket, aws_iam_policy, aws_db_instance,
+        aws_instance (EC2), aws_lambda_function, aws_lb_listener, aws_cloudtrail.
 """
 
 import pandas as pd
@@ -8,12 +9,10 @@ import random
 
 random.seed(42)
 
-# ---------------------------------------------------------------------------
-# Template pools
-# ---------------------------------------------------------------------------
+# ── HIGH RISK snippets ─────────────────────────────────────────────────────
 
 HIGH_RISK_SNIPPETS = [
-    # Security groups – open CIDR + SSH
+    # Security group – SSH open to internet
     '''resource "aws_security_group" "open_ssh" {
   name = "open-ssh"
   ingress {
@@ -23,7 +22,7 @@ HIGH_RISK_SNIPPETS = [
     cidr_blocks = ["0.0.0.0/0"]
   }
 }''',
-    # Security groups – open CIDR + RDP
+    # Security group – RDP open to internet
     '''resource "aws_security_group" "open_rdp" {
   name = "open-rdp"
   ingress {
@@ -33,7 +32,7 @@ HIGH_RISK_SNIPPETS = [
     cidr_blocks = ["0.0.0.0/0"]
   }
 }''',
-    # Security groups – all ports open
+    # Security group – all ports open
     '''resource "aws_security_group" "all_open" {
   name = "all-open"
   ingress {
@@ -45,15 +44,12 @@ HIGH_RISK_SNIPPETS = [
 }''',
     # RDS publicly accessible + no encryption
     '''resource "aws_db_instance" "unsafe_db" {
-  identifier        = "unsafe-db"
-  engine            = "mysql"
-  instance_class    = "db.t3.micro"
+  engine              = "mysql"
+  instance_class      = "db.t3.micro"
   publicly_accessible = true
-  storage_encrypted = false
-  username          = "admin"
-  password          = "password123"
+  storage_encrypted   = false
 }''',
-    # RDS port exposed to world
+    # RDS MySQL port exposed to world
     '''resource "aws_security_group_rule" "db_open" {
   type        = "ingress"
   from_port   = 3306
@@ -74,7 +70,7 @@ HIGH_RISK_SNIPPETS = [
     }]
   })
 }''',
-    # S3 bucket public + no encryption
+    # S3 public-read-write ACL
     '''resource "aws_s3_bucket" "public_bucket" {
   bucket = "my-public-bucket"
 }
@@ -82,7 +78,7 @@ resource "aws_s3_bucket_acl" "public_acl" {
   bucket = aws_s3_bucket.public_bucket.id
   acl    = "public-read-write"
 }''',
-    # SSH + MySQL both open
+    # SSH + MySQL both open to internet
     '''resource "aws_security_group" "web_db_open" {
   name = "web-db-open"
   ingress {
@@ -98,16 +94,15 @@ resource "aws_s3_bucket_acl" "public_acl" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }''',
-    # RDS postgres publicly accessible no encryption
+    # RDS Postgres publicly accessible + no encryption
     '''resource "aws_db_instance" "pg_unsafe" {
-  identifier        = "pg-unsafe"
-  engine            = "postgres"
-  instance_class    = "db.t3.small"
+  engine              = "postgres"
+  instance_class      = "db.t3.small"
   publicly_accessible = true
-  storage_encrypted = false
-  port              = 5432
+  storage_encrypted   = false
+  port                = 5432
 }''',
-    # IAM wildcard on S3
+    # IAM wildcard action on all S3
     '''resource "aws_iam_policy" "s3_wildcard" {
   name = "s3-wildcard"
   policy = jsonencode({
@@ -119,7 +114,7 @@ resource "aws_s3_bucket_acl" "public_acl" {
     }]
   })
 }''',
-    # Security group rule RDP from internet
+    # Security group rule – RDP from internet
     '''resource "aws_security_group_rule" "rdp_rule" {
   type              = "ingress"
   from_port         = 3389
@@ -128,12 +123,12 @@ resource "aws_s3_bucket_acl" "public_acl" {
   cidr_blocks       = ["0.0.0.0/0"]
   security_group_id = aws_security_group.example.id
 }''',
-    # S3 bucket with public-read ACL
+    # S3 public-read ACL
     '''resource "aws_s3_bucket" "data_bucket" {
   bucket = "company-data-public"
   acl    = "public-read"
 }''',
-    # All traffic open on all ports
+    # All traffic open on all protocols
     '''resource "aws_security_group_rule" "all_traffic" {
   type        = "ingress"
   from_port   = 0
@@ -141,14 +136,6 @@ resource "aws_s3_bucket_acl" "public_acl" {
   protocol    = "-1"
   cidr_blocks = ["0.0.0.0/0"]
   security_group_id = aws_security_group.sg.id
-}''',
-    # RDS with default public settings
-    '''resource "aws_db_instance" "main" {
-  engine              = "mysql"
-  instance_class      = "db.m5.large"
-  publicly_accessible = true
-  storage_encrypted   = false
-  multi_az            = false
 }''',
     # IAM full EC2 + S3 wildcard resource
     '''resource "aws_iam_policy" "ec2_s3_all" {
@@ -162,10 +149,78 @@ resource "aws_s3_bucket_acl" "public_acl" {
     }]
   })
 }''',
+    # RDS unencrypted, public, no multi-AZ
+    '''resource "aws_db_instance" "main" {
+  engine              = "mysql"
+  instance_class      = "db.m5.large"
+  publicly_accessible = true
+  storage_encrypted   = false
+  multi_az            = false
+}''',
+    # EC2 – public IP + unencrypted EBS volume
+    '''resource "aws_instance" "public_unencrypted_ec2" {
+  ami                         = "ami-0c55b159cbfafe1f0"
+  instance_type               = "t2.micro"
+  associate_public_ip_address = true
+
+  ebs_block_device {
+    device_name = "/dev/sda1"
+    encrypted   = false
+    volume_size = 30
+  }
+}''',
+    # EC2 – public IP + hardcoded database password
+    '''resource "aws_instance" "hardcoded_creds_ec2" {
+  ami                         = "ami-0c55b159cbfafe1f0"
+  instance_type               = "t2.micro"
+  associate_public_ip_address = true
+
+  user_data = base64encode(<<-EOF
+    db_password = "SuperSecret_DB_Pass123"
+    api_token   = "hardcoded_api_token_value"
+  EOF
+  )
+}''',
+    # Lambda – hardcoded password and secret in environment variables
+    '''resource "aws_lambda_function" "insecure_lambda" {
+  filename      = "function.zip"
+  function_name = "insecure-function"
+  role          = aws_iam_role.lambda_role.arn
+  handler       = "index.handler"
+  runtime       = "python3.11"
+
+  environment {
+    variables = {
+      password    = "hardcoded_password_value"
+      db_secret   = "my_database_secret_1234"
+      api_token   = "hardcoded_api_token_abc"
+    }
+  }
+}''',
+    # Load balancer listener – plain HTTP, no redirect
+    '''resource "aws_lb_listener" "http_only" {
+  load_balancer_arn = aws_lb.main.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.app.arn
+  }
+}''',
+    # CloudTrail – logging explicitly disabled
+    '''resource "aws_cloudtrail" "disabled_trail" {
+  name                       = "disabled-trail"
+  s3_bucket_name             = aws_s3_bucket.trail.id
+  enable_logging             = false
+  enable_log_file_validation = false
+}''',
 ]
 
+# ── MEDIUM RISK snippets ───────────────────────────────────────────────────
+
 MEDIUM_RISK_SNIPPETS = [
-    # SSH open to broad but not full internet
+    # SSH restricted to broad internal range
     '''resource "aws_security_group" "office_ssh" {
   name = "office-ssh"
   ingress {
@@ -177,13 +232,12 @@ MEDIUM_RISK_SNIPPETS = [
 }''',
     # RDS publicly accessible but encrypted
     '''resource "aws_db_instance" "semi_safe_db" {
-  identifier        = "semi-safe"
-  engine            = "mysql"
-  instance_class    = "db.t3.micro"
+  engine              = "mysql"
+  instance_class      = "db.t3.micro"
   publicly_accessible = true
-  storage_encrypted = true
+  storage_encrypted   = true
 }''',
-    # S3 bucket no explicit block public access configured
+    # S3 bucket – no public access block configured
     '''resource "aws_s3_bucket" "logs_bucket" {
   bucket = "app-logs-bucket"
 }''',
@@ -208,7 +262,7 @@ MEDIUM_RISK_SNIPPETS = [
   cidr_blocks = ["172.16.0.0/12"]
   security_group_id = aws_security_group.db_sg.id
 }''',
-    # HTTP open to all (not HTTPS)
+    # HTTP open to all (web server without HTTPS enforcement)
     '''resource "aws_security_group" "http_open" {
   name = "http-open"
   ingress {
@@ -218,16 +272,15 @@ MEDIUM_RISK_SNIPPETS = [
     cidr_blocks = ["0.0.0.0/0"]
   }
 }''',
-    # RDS no encryption single AZ
+    # RDS no encryption, not public, single AZ
     '''resource "aws_db_instance" "no_encrypt_db" {
-  identifier      = "no-encrypt"
-  engine          = "postgres"
-  instance_class  = "db.t3.micro"
-  storage_encrypted = false
-  multi_az        = false
+  engine              = "postgres"
+  instance_class      = "db.t3.micro"
+  storage_encrypted   = false
+  multi_az            = false
   publicly_accessible = false
 }''',
-    # IAM wildcard action scoped to specific resource
+    # IAM wildcard action scoped to specific bucket
     '''resource "aws_iam_policy" "s3_specific" {
   name = "s3-specific-wildcard"
   policy = jsonencode({
@@ -239,7 +292,7 @@ MEDIUM_RISK_SNIPPETS = [
     }]
   })
 }''',
-    # Security group allows all outbound
+    # Security group – loose egress, restricted ingress
     '''resource "aws_security_group" "loose_egress" {
   name = "loose-egress"
   egress {
@@ -255,7 +308,7 @@ MEDIUM_RISK_SNIPPETS = [
     cidr_blocks = ["10.0.0.0/16"]
   }
 }''',
-    # S3 bucket with server-side encryption but no public block
+    # S3 encrypted but no public access block
     '''resource "aws_s3_bucket" "encrypted_no_block" {
   bucket = "encrypted-no-block"
 }
@@ -276,7 +329,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "enc" {
   cidr_blocks = ["192.168.0.0/16"]
   security_group_id = aws_security_group.windows.id
 }''',
-    # IAM broad S3 read on all buckets
+    # IAM broad read on all S3 buckets
     '''resource "aws_iam_policy" "s3_read_all" {
   name = "s3-read-all"
   policy = jsonencode({
@@ -288,7 +341,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "enc" {
     }]
   })
 }''',
-    # PostgreSQL open on private network
+    # Postgres open on internal network only
     '''resource "aws_security_group_rule" "pg_internal" {
   type        = "ingress"
   from_port   = 5432
@@ -297,16 +350,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "enc" {
   cidr_blocks = ["10.0.0.0/16"]
   security_group_id = aws_security_group.app_sg.id
 }''',
-    # RDS with backup disabled
-    '''resource "aws_db_instance" "no_backup" {
-  identifier         = "no-backup"
-  engine             = "mysql"
-  instance_class     = "db.t3.micro"
-  backup_retention_period = 0
-  storage_encrypted  = false
-  publicly_accessible = false
-}''',
-    # HTTP + HTTPS open to internet
+    # HTTP + HTTPS both open (missing HTTP→HTTPS redirect)
     '''resource "aws_security_group" "web_server" {
   name = "web-server"
   ingress {
@@ -322,7 +366,49 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "enc" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }''',
+    # RDS with backup disabled
+    '''resource "aws_db_instance" "no_backup" {
+  engine                  = "mysql"
+  instance_class          = "db.t3.micro"
+  backup_retention_period = 0
+  storage_encrypted       = false
+  publicly_accessible     = false
+}''',
+    # EC2 – public IP assigned but EBS encrypted
+    '''resource "aws_instance" "public_ec2_encrypted" {
+  ami                         = "ami-0c55b159cbfafe1f0"
+  instance_type               = "t2.micro"
+  associate_public_ip_address = true
+
+  ebs_block_device {
+    device_name = "/dev/sda1"
+    encrypted   = true
+    volume_size = 20
+  }
+}''',
+    # Security group – IPv6 open CIDR (all internet via IPv6)
+    '''resource "aws_security_group_rule" "ipv6_open" {
+  type             = "ingress"
+  from_port        = 80
+  to_port          = 80
+  protocol         = "tcp"
+  ipv6_cidr_blocks = ["::/0"]
+  security_group_id = aws_security_group.web_sg.id
+}''',
+    # EC2 – variable-based security settings (unknown risk at scan time)
+    '''resource "aws_instance" "var_config_ec2" {
+  ami           = "ami-0c55b159cbfafe1f0"
+  instance_type = "t2.micro"
+
+  ebs_block_device {
+    device_name = "/dev/sda1"
+    encrypted   = var.encrypt_ebs
+    volume_size = 20
+  }
+}''',
 ]
+
+# ── LOW RISK snippets ──────────────────────────────────────────────────────
 
 LOW_RISK_SNIPPETS = [
     # Security group – SSH restricted to single IP
@@ -337,12 +423,11 @@ LOW_RISK_SNIPPETS = [
 }''',
     # RDS fully secure
     '''resource "aws_db_instance" "safe_db" {
-  identifier           = "safe-db"
-  engine               = "mysql"
-  instance_class       = "db.t3.micro"
-  publicly_accessible  = false
-  storage_encrypted    = true
-  multi_az             = true
+  engine                  = "mysql"
+  instance_class          = "db.t3.micro"
+  publicly_accessible     = false
+  storage_encrypted       = true
+  multi_az                = true
   backup_retention_period = 7
 }''',
     # S3 with full public access block
@@ -368,7 +453,7 @@ resource "aws_s3_bucket_public_access_block" "block" {
     }]
   })
 }''',
-    # Security group HTTPS only from specific range
+    # Security group – HTTPS only from specific VPC range
     '''resource "aws_security_group" "https_restricted" {
   name = "https-only"
   ingress {
@@ -378,9 +463,8 @@ resource "aws_s3_bucket_public_access_block" "block" {
     cidr_blocks = ["10.0.0.0/16"]
   }
 }''',
-    # RDS private encrypted multi-AZ
+    # RDS private encrypted multi-AZ with deletion protection
     '''resource "aws_db_instance" "prod_db" {
-  identifier              = "prod-db"
   engine                  = "postgres"
   engine_version          = "14.5"
   instance_class          = "db.m5.large"
@@ -390,7 +474,7 @@ resource "aws_s3_bucket_public_access_block" "block" {
   deletion_protection     = true
   backup_retention_period = 30
 }''',
-    # S3 with encryption and logging
+    # S3 with encryption and public access block
     '''resource "aws_s3_bucket" "secure_bucket" {
   bucket = "secure-data-bucket"
 }
@@ -421,7 +505,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "secure_enc" {
     }]
   })
 }''',
-    # Security group database in private subnet only
+    # Security group – DB access from app SG only (no CIDR range)
     '''resource "aws_security_group" "db_private" {
   name = "db-private"
   ingress {
@@ -431,7 +515,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "secure_enc" {
     security_groups = [aws_security_group.app_sg.id]
   }
 }''',
-    # Security group HTTPS only from ALB
+    # Security group – app traffic from ALB only
     '''resource "aws_security_group" "app_sg" {
   name = "app-sg"
   ingress {
@@ -441,7 +525,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "secure_enc" {
     security_groups = [aws_security_group.alb_sg.id]
   }
 }''',
-    # IAM EC2 describe only
+    # IAM EC2 describe-only
     '''resource "aws_iam_policy" "ec2_describe" {
   name = "ec2-describe-only"
   policy = jsonencode({
@@ -453,7 +537,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "secure_enc" {
     }]
   })
 }''',
-    # S3 private bucket no public block needed (private by default in new accounts)
+    # S3 private ACL
     '''resource "aws_s3_bucket" "internal_logs" {
   bucket = "internal-audit-logs"
 }
@@ -463,14 +547,13 @@ resource "aws_s3_bucket_acl" "private_acl" {
 }''',
     # RDS snapshot encrypted
     '''resource "aws_db_instance" "replica_db" {
-  identifier            = "replica-db"
   engine                = "mysql"
   instance_class        = "db.t3.medium"
   publicly_accessible   = false
   storage_encrypted     = true
   copy_tags_to_snapshot = true
 }''',
-    # Security group only allows outbound on 443
+    # Security group – egress HTTPS only
     '''resource "aws_security_group" "egress_only_https" {
   name = "egress-only-https"
   egress {
@@ -492,12 +575,82 @@ resource "aws_s3_bucket_acl" "private_acl" {
     }]
   })
 }''',
+    # EC2 – private, encrypted EBS, no hardcoded secrets
+    '''resource "aws_instance" "secure_ec2" {
+  ami                         = "ami-0c55b159cbfafe1f0"
+  instance_type               = "t3.medium"
+  associate_public_ip_address = false
+  iam_instance_profile        = aws_iam_instance_profile.ec2_profile.name
+
+  ebs_block_device {
+    device_name = "/dev/sda1"
+    encrypted   = true
+    volume_size = 50
+  }
+}''',
+    # Lambda – VPC config, no hardcoded secrets
+    '''resource "aws_lambda_function" "secure_lambda" {
+  filename      = "function.zip"
+  function_name = "secure-function"
+  role          = aws_iam_role.lambda_role.arn
+  handler       = "index.handler"
+  runtime       = "python3.11"
+
+  vpc_config {
+    subnet_ids         = [aws_subnet.private_a.id, aws_subnet.private_b.id]
+    security_group_ids = [aws_security_group.lambda_sg.id]
+  }
+
+  environment {
+    variables = {
+      DB_HOST = aws_db_instance.main.address
+      ENV     = "production"
+    }
+  }
+}''',
+    # LB listener – HTTPS only, HTTP redirects to HTTPS
+    '''resource "aws_lb_listener" "https_listener" {
+  load_balancer_arn = aws_lb.main.arn
+  port              = "443"
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-TLS13-1-2-2021-06"
+  certificate_arn   = aws_acm_certificate.cert.arn
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.app.arn
+  }
+}
+resource "aws_lb_listener" "http_redirect" {
+  load_balancer_arn = aws_lb.main.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type = "redirect"
+    redirect {
+      port        = "443"
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
+    }
+  }
+}''',
+    # CloudTrail – logging on, encrypted, log validation enabled
+    '''resource "aws_cloudtrail" "secure_trail" {
+  name                          = "secure-trail"
+  s3_bucket_name                = aws_s3_bucket.trail.id
+  enable_logging                = true
+  enable_log_file_validation    = true
+  include_global_service_events = true
+  is_multi_region_trail         = true
+  kms_key_id                    = aws_kms_key.trail_key.arn
+}''',
 ]
 
 
-def build_dataset(target_size: int = 240) -> pd.DataFrame:
+def build_dataset(target_size: int = 300) -> pd.DataFrame:
     """
-    Assembles a balanced dataset by sampling from the template pools.
+    Assembles a balanced dataset by cycling through the template pools.
     target_size should be divisible by 3 for equal class distribution.
     """
     per_class = target_size // 3
@@ -508,9 +661,9 @@ def build_dataset(target_size: int = 240) -> pd.DataFrame:
         random.shuffle(chosen)
         return [{"terraform_snippet": s, "risk_label": label} for s in chosen]
 
-    rows += sample_pool(HIGH_RISK_SNIPPETS, "High", per_class)
+    rows += sample_pool(HIGH_RISK_SNIPPETS,   "High",   per_class)
     rows += sample_pool(MEDIUM_RISK_SNIPPETS, "Medium", per_class)
-    rows += sample_pool(LOW_RISK_SNIPPETS, "Low", per_class)
+    rows += sample_pool(LOW_RISK_SNIPPETS,    "Low",    per_class)
 
     random.shuffle(rows)
     return pd.DataFrame(rows)
@@ -518,7 +671,7 @@ def build_dataset(target_size: int = 240) -> pd.DataFrame:
 
 if __name__ == "__main__":
     import os
-    df = build_dataset(240)
+    df = build_dataset(300)
     out_path = os.path.join(os.path.dirname(__file__), "terraform_dataset.csv")
     df.to_csv(out_path, index=False)
     print(f"Dataset saved to {out_path}")

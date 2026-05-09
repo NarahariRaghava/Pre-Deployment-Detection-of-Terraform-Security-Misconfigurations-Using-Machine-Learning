@@ -1,22 +1,23 @@
 # Pre-Deployment Detection of Terraform Security Misconfigurations Using Machine Learning
 
-## Project Purpose
-
-This research prototype demonstrates how machine learning can be applied to Infrastructure-as-Code (IaC) security analysis. The system scans Terraform configuration snippets *before* deployment and classifies each one as **Low**, **Medium**, or **High** security risk — helping developers catch dangerous misconfigurations in CI/CD pipelines before they reach production.
+The idea is simple: instead of waiting until after deployment to find security problems in your infrastructure code, catch them before they ever reach AWS. This tool takes Terraform `.tf` files, extracts security-relevant signals from each resource block, and uses a trained classifier to label each one as Low, Medium, or High risk.
 
 ---
 
-## Research Problem
+## The Problem
 
-Cloud infrastructure misconfigurations are a leading cause of data breaches. Common examples include:
+Terraform lets you define cloud infrastructure as code, which is great for automation and consistency — but it also means a single misconfiguration can get deployed everywhere at once. Common mistakes include:
 
-- Security groups open to the entire internet (`0.0.0.0/0`)
-- SSH or RDP ports exposed publicly
-- Unencrypted databases accessible from the internet
-- Overly permissive IAM policies using wildcard actions/resources
-- S3 buckets with public ACLs
+- Security groups open to `0.0.0.0/0` on SSH or RDP
+- RDS databases with `publicly_accessible = true` and no encryption
+- IAM policies with `Action = "*"` and `Resource = "*"` (full admin access)
+- S3 buckets with public-read ACLs
+- EC2 instances with public IPs and unencrypted storage
+- Hardcoded passwords or API tokens in Lambda environment variables
+- Load balancers serving traffic over plain HTTP
+- CloudTrail logging turned off
 
-Traditional static analysis tools rely on hand-crafted rules. This project explores whether a supervised ML classifier trained on feature-engineered Terraform snippets can achieve competitive accuracy with less manual rule maintenance.
+Most of these are caught by commercial scanners, but this project builds the detection pipeline from scratch using ML to explore whether a feature-based classifier can replicate that behavior.
 
 ---
 
@@ -25,54 +26,61 @@ Traditional static analysis tools rely on hand-crafted rules. This project explo
 ```
 terraform-security-ml/
 ├── data/
-│   ├── generate_dataset.py     # Synthetic dataset builder
-│   └── terraform_dataset.csv   # Generated dataset (created at runtime)
+│   ├── generate_dataset.py     # builds the synthetic training set
+│   ├── terraform_dataset.csv   # generated at runtime
+│   └── sample_tf/
+│       └── example.tf          # a ready-to-scan example file
 ├── src/
-│   ├── __init__.py
-│   ├── feature_extractor.py    # Regex-based feature extraction
-│   ├── model_trainer.py        # Training, evaluation, chart generation
-│   └── predictor.py            # Inference on new snippets
+│   ├── feature_extractor.py    # regex-based feature extraction
+│   ├── model_trainer.py        # training, evaluation, chart generation
+│   ├── predictor.py            # loads saved model, classifies new snippets
+│   └── report_generator.py     # produces the HTML scan report
 ├── notebooks/
-│   └── exploration.ipynb       # Optional exploratory analysis
-├── outputs/                    # Generated at runtime
+│   └── exploration.ipynb       # interactive data exploration
+├── outputs/                    # everything generated at runtime goes here
 │   ├── evaluation_report.json
-│   ├── confusion_matrix_randomforest.png
-│   ├── confusion_matrix_decisiontree.png
-│   ├── feature_importance_randomforest.png
-│   ├── feature_importance_decisiontree.png
+│   ├── evaluation_report.txt
+│   ├── confusion_matrix_*.png
+│   ├── feature_importance_*.png
+│   ├── sample_predictions.*
+│   ├── scan_*.json / .txt / .html
 │   └── models/
 │       ├── randomforest.joblib
-│       └── decisiontree.joblib
-├── main.py                     # CLI entry point
+│       ├── decisiontree.joblib
+│       └── logisticregression.joblib
+├── main.py
 ├── requirements.txt
 └── README.md
 ```
 
 ---
 
-## Dataset Generation
+## Dataset
 
-The dataset is fully synthetic and built from hand-crafted Terraform HCL templates covering four AWS resource types:
+The training data is synthetic — 300 hand-written Terraform snippets, 100 per class. Each snippet is labeled High, Medium, or Low risk based on what it contains.
 
-| Resource | Examples |
+Resource types covered:
+
+| Resource | Risk examples |
 |---|---|
-| `aws_security_group` / `aws_security_group_rule` | SSH open to `0.0.0.0/0`, RDP open, DB ports exposed |
-| `aws_s3_bucket` | Public ACLs, missing public-access blocks |
-| `aws_iam_policy` | Wildcard `Action = "*"`, wildcard `Resource = "*"` |
+| `aws_security_group` / `aws_security_group_rule` | SSH/RDP open to `0.0.0.0/0`, all ports open, DB ports exposed |
+| `aws_s3_bucket` | Public-read ACL, missing public access block |
+| `aws_iam_policy` | `Action = "*"`, `Resource = "*"` |
 | `aws_db_instance` | `publicly_accessible = true`, `storage_encrypted = false` |
+| `aws_instance` | Public IP assigned, unencrypted EBS, hardcoded credentials |
+| `aws_lambda_function` | Hardcoded passwords/tokens in environment variables |
+| `aws_lb_listener` | `protocol = "HTTP"` with no HTTPS redirect |
+| `aws_cloudtrail` | `enable_logging = false` |
 
-**Size:** 240 rows (80 per class, balanced).  
-**Labels:** `Low`, `Medium`, `High`
-
-The `build_dataset()` function samples from 15 templates per class with cycling and shuffling to add variety without overfitting to exact templates.
+The dataset is balanced by design. Real-world IaC repos skew heavily toward Low risk, which is one of the known limitations.
 
 ---
 
 ## Feature Extraction
 
-Features are extracted via regex pattern matching — no full HCL parser required.
+Each snippet gets converted into 17 binary features using regex pattern matching. No HCL parser is needed.
 
-| Feature | What it detects |
+| Feature | Detects |
 |---|---|
 | `has_open_cidr` | `cidr_blocks = ["0.0.0.0/0"]` |
 | `has_ssh_open` | `from_port = 22` |
@@ -83,68 +91,64 @@ Features are extracted via regex pattern matching — no full HCL parser require
 | `has_wildcard_iam_action` | `Action = "*"` |
 | `has_wildcard_iam_resource` | `Resource = "*"` |
 | `has_s3_public_risk` | `acl = "public-read"` or `"public-read-write"` |
-| `count_sensitive_indicators` | Sum of all binary flags above |
-
-All features are binary (0/1) except `count_sensitive_indicators` which is an integer count.
+| `has_ipv6_open_cidr` | `::/0` in cidr_blocks |
+| `has_hardcoded_secret` | `password/secret/token = "literal_value"` |
+| `has_variable_security_ref` | Security-sensitive value uses `var.` — unknown at scan time |
+| `has_public_ip_assigned` | `associate_public_ip_address = true` |
+| `has_http_listener` | `protocol = "HTTP"` on a load balancer listener |
+| `has_cloudtrail_disabled` | `enable_logging = false` |
+| `has_unencrypted_ebs` | `encrypted = false` on an EBS volume |
+| `count_sensitive_indicators` | Sum of all flags above |
 
 ---
 
-## ML Models
+## Models
 
-### RandomForestClassifier (primary)
-- 100 estimators, max depth 8
-- Provides probability scores per class
-- Generates feature importance rankings
+Three classifiers are trained and compared:
 
-### DecisionTreeClassifier (comparison)
-- Max depth 6
-- Simple, interpretable tree structure
-- Useful baseline to compare against ensemble method
+**RandomForestClassifier** — 100 trees, max depth 8. The primary model used for predictions. Outputs probability scores per class which lets you see how confident it was in each decision.
 
-Both models are trained with a **75/25 train/test split** and evaluated on:
-- Accuracy
-- Precision, Recall, F1-score (per class)
-- Confusion matrix
-- Feature importance chart
+**DecisionTreeClassifier** — single tree, max depth 6. Simpler and more interpretable, used as a comparison baseline.
+
+**LogisticRegression** — linear model, included to check whether the classification problem is linearly separable given the current feature set.
+
+All three use `class_weight='balanced'` to account for real-world class imbalance. Training uses a 75/25 split, and 5-fold cross-validation gives a more reliable accuracy estimate than a single split.
 
 ---
 
 ## How to Run
 
-### 1. Install dependencies
-
+**First time setup:**
 ```bash
-cd terraform-security-ml
+cd ~/Desktop/terraform-security-ml
+python3 -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### 2. Train models and generate outputs
-
+**Train the models:**
 ```bash
 python main.py --train
 ```
 
-This will:
-- Generate `data/terraform_dataset.csv` (240 rows)
-- Extract features from each snippet
-- Train both classifiers
-- Save evaluation metrics to `outputs/evaluation_report.json`
-- Save confusion matrix PNGs to `outputs/`
-- Save feature importance chart to `outputs/`
-- Save model files to `outputs/models/`
-
-### 3. Run demo predictions
-
+**Run predictions on built-in demo snippets:**
 ```bash
 python main.py --predict
 ```
 
-This loads the trained RandomForest model and runs it against 5 built-in example snippets, printing risk level, confidence scores, and plain-English explanation.
-
-### 4. Train and predict in one step
-
+**Scan a single Terraform file:**
 ```bash
-python main.py --train --predict
+python main.py --file path/to/main.tf
+```
+
+**Scan an entire Terraform project directory:**
+```bash
+python main.py --dir path/to/project/
+```
+
+After scanning, open the HTML report for a colour-coded view:
+```bash
+open outputs/scan_<filename>.html
 ```
 
 ---
@@ -152,64 +156,41 @@ python main.py --train --predict
 ## Sample Output
 
 ```
---- High Risk – SSH + open CIDR ---
+Resource : aws_security_group.open_ssh
+Risk     : High   (High: 94%  |  Low: 2%  |  Medium: 4%)
+Reason   : CIDR range is open to the entire internet (0.0.0.0/0); SSH (port 22) is exposed.
 
-=======================================================
-  Risk Level  : High
-  Confidence  : High: 94.0%  |  Low: 2.0%  |  Medium: 4.0%
-  Reason      : CIDR range is open to the entire internet (0.0.0.0/0); SSH (port 22) is exposed.
-  Triggered Features:
-    • has_open_cidr
-    • has_ssh_open
-  Total Indicators: 2
-=======================================================
+Resource : aws_db_instance.reporting_db
+Risk     : Medium   (High: 13%  |  Low: 10%  |  Medium: 76%)
+Reason   : the database is publicly accessible.
 
---- Low Risk – private RDS, encrypted, multi-AZ ---
+Resource : aws_db_instance.secure_db
+Risk     : Low   (High: 1%  |  Low: 73%  |  Medium: 26%)
+Reason   : No high-risk indicators detected.
 
-=======================================================
-  Risk Level  : Low
-  Confidence  : High: 1.0%  |  Low: 97.0%  |  Medium: 2.0%
-  Reason      : No high-risk indicators detected.
-  Triggered Features:
-  Total Indicators: 0
-=======================================================
+Summary  :  High=3  Medium=1  Low=5
 ```
+
+The HTML report shows the same information in a colour-coded table you can share or include in a write-up.
 
 ---
 
 ## Limitations
 
-1. **Synthetic data only** — the dataset is hand-crafted from templates, not real-world Terraform repositories. Model performance on real IaC code may differ.
-2. **String matching, not parsing** — features rely on regex patterns that can miss obfuscated or dynamically generated configurations.
-3. **No context awareness** — the model evaluates each snippet independently and cannot reason about cross-resource relationships (e.g., a security group's effect depends on which EC2 instance uses it).
-4. **Fixed feature set** — new misconfiguration types require manual addition of regex patterns and retraining.
-5. **Class imbalance ignored** — the dataset is artificially balanced; real-world IaC repositories likely have more Low-risk configurations.
+**The training data is still synthetic.** Even with 8 resource types and 300 examples, all snippets were written by hand from templates. The model has never seen a real infrastructure codebase, so performance on production Terraform may be lower than the eval numbers suggest.
+
+**Regex is not a parser.** The feature extraction uses string matching, which means it can miss things. If a value is computed dynamically, comes from a `locals` block, or uses Terraform's `merge()` function, the feature won't fire. The `has_variable_security_ref` flag helps flag these cases but doesn't resolve them.
+
+**No cross-resource reasoning.** Each resource block is evaluated in isolation. Whether a security group is actually dangerous depends on which EC2 instance uses it — that context is invisible to this model.
+
+**Class balance is artificial.** The 100/100/100 split doesn't reflect reality. In most infrastructure repos, the majority of resources are probably Low risk. A model trained on this distribution may be overconfident when applied to a real codebase.
 
 ---
 
-## Future Work
+## What could be improved
 
-- **Real dataset** — collect labeled Terraform snippets from public GitHub repositories and security audit reports.
-- **HCL parsing** — use `python-hcl2` for structured feature extraction instead of regex.
-- **NLP features** — apply TF-IDF or code embeddings to capture semantic patterns beyond hand-crafted features.
-- **Graph-based analysis** — model resource dependencies to reason about combined misconfiguration risk.
-- **CI/CD integration** — wrap the predictor as a GitHub Action or pre-commit hook.
-- **Explainability** — add SHAP values for per-prediction feature attribution.
-- **Feedback loop** — allow security engineers to label new snippets and retrain incrementally.
-
----
-
-## Dependencies
-
-```
-scikit-learn>=1.3.0
-pandas>=2.0.0
-numpy>=1.24.0
-matplotlib>=3.7.0
-seaborn>=0.12.0
-joblib>=1.3.0
-```
-
----
-
-*Course project — ENPM818N Spring 2026, Group 3*
+- Collect real labeled Terraform from public GitHub repos and use that for training instead of (or alongside) the synthetic set
+- Use `python-hcl2` to properly parse HCL and extract structured values rather than relying on regex
+- Add graph-based analysis to reason about cross-resource relationships
+- Build a GitHub Action or pre-commit hook so this runs automatically in CI
+- Add SHAP values for per-prediction feature attribution instead of the current rule-based explanations

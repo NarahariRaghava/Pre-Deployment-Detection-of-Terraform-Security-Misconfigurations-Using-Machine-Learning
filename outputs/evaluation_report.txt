@@ -1,32 +1,49 @@
 Terraform Security Misconfiguration Detector – Evaluation Report
 =================================================================
-Dataset size : 240 rows  |  Test fraction : 0.25
-Random state : 42
+Dataset size : 300 rows  |  Test fraction : 0.25
+Features     : 17  |  Random state : 42
 
-Model : RandomForest
-Accuracy : 0.7333
+Model    : RandomForest
+Accuracy : 0.7733
+CV (5-fold mean ± std) : 0.7833 ± 0.0350
               precision    recall  f1-score   support
 
-        High       1.00      0.90      0.95        20
-         Low       0.62      0.80      0.70        20
-      Medium       0.62      0.50      0.56        20
+        High       1.00      0.68      0.81        25
+         Low       0.77      0.80      0.78        25
+      Medium       0.66      0.84      0.74        25
 
-    accuracy                           0.73        60
-   macro avg       0.75      0.73      0.73        60
-weighted avg       0.75      0.73      0.73        60
+    accuracy                           0.77        75
+   macro avg       0.81      0.77      0.78        75
+weighted avg       0.81      0.77      0.78        75
 
 -----------------------------------------------------------------
 
-Model : DecisionTree
-Accuracy : 0.7333
+Model    : DecisionTree
+Accuracy : 0.7733
+CV (5-fold mean ± std) : 0.7700 ± 0.0323
               precision    recall  f1-score   support
 
-        High       1.00      0.90      0.95        20
-         Low       0.62      0.80      0.70        20
-      Medium       0.62      0.50      0.56        20
+        High       1.00      0.68      0.81        25
+         Low       0.77      0.80      0.78        25
+      Medium       0.66      0.84      0.74        25
 
-    accuracy                           0.73        60
-   macro avg       0.75      0.73      0.73        60
-weighted avg       0.75      0.73      0.73        60
+    accuracy                           0.77        75
+   macro avg       0.81      0.77      0.78        75
+weighted avg       0.81      0.77      0.78        75
+
+-----------------------------------------------------------------
+
+Model    : LogisticRegression
+Accuracy : 0.8133
+CV (5-fold mean ± std) : 0.7867 ± 0.0371
+              precision    recall  f1-score   support
+
+        High       0.95      0.84      0.89        25
+         Low       0.77      0.80      0.78        25
+      Medium       0.74      0.80      0.77        25
+
+    accuracy                           0.81        75
+   macro avg       0.82      0.81      0.82        75
+weighted avg       0.82      0.81      0.82        75
 
 -----------------------------------------------------------------

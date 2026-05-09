@@ -1,8 +1,8 @@
 {
-  "source": "data/sample_tf/example.tf",
+  "source": "data/sample_tf/",
   "results": [
     {
-      "file": "data/sample_tf/example.tf",
+      "file": "example.tf",
       "resource_type": "aws_security_group",
       "resource_name": "open_ssh",
       "risk_level": "High",
@@ -33,7 +33,7 @@
       }
     },
     {
-      "file": "data/sample_tf/example.tf",
+      "file": "example.tf",
       "resource_type": "aws_iam_policy",
       "resource_name": "admin_policy",
       "risk_level": "High",
@@ -64,7 +64,7 @@
       }
     },
     {
-      "file": "data/sample_tf/example.tf",
+      "file": "example.tf",
       "resource_type": "aws_db_instance",
       "resource_name": "unsafe_db",
       "risk_level": "High",
@@ -95,7 +95,7 @@
       }
     },
     {
-      "file": "data/sample_tf/example.tf",
+      "file": "example.tf",
       "resource_type": "aws_s3_bucket",
       "resource_name": "app_logs",
       "risk_level": "Low",
@@ -126,7 +126,7 @@
       }
     },
     {
-      "file": "data/sample_tf/example.tf",
+      "file": "example.tf",
       "resource_type": "aws_db_instance",
       "resource_name": "reporting_db",
       "risk_level": "Medium",
@@ -157,7 +157,7 @@
       }
     },
     {
-      "file": "data/sample_tf/example.tf",
+      "file": "example.tf",
       "resource_type": "aws_s3_bucket",
       "resource_name": "private_data",
       "risk_level": "Low",
@@ -188,7 +188,7 @@
       }
     },
     {
-      "file": "data/sample_tf/example.tf",
+      "file": "example.tf",
       "resource_type": "aws_s3_bucket_public_access_block",
       "resource_name": "private_data_block",
       "risk_level": "Low",
@@ -219,7 +219,7 @@
       }
     },
     {
-      "file": "data/sample_tf/example.tf",
+      "file": "example.tf",
       "resource_type": "aws_iam_policy",
       "resource_name": "readonly_s3",
       "risk_level": "Low",
@@ -250,7 +250,7 @@
       }
     },
     {
-      "file": "data/sample_tf/example.tf",
+      "file": "example.tf",
       "resource_type": "aws_db_instance",
       "resource_name": "secure_db",
       "risk_level": "Low",
