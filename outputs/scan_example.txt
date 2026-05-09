@@ -1,0 +1,58 @@
+Terraform Security Scan – data/sample_tf/example.tf
+=================================================================
+
+Resource : aws_security_group.open_ssh
+Risk     : High
+Confidence: High: 100%  |  Low: 0%  |  Medium: 0%
+Reason   : CIDR range is open to the entire internet (0.0.0.0/0); SSH (port 22) is exposed.
+-----------------------------------------------------------------
+
+Resource : aws_iam_policy.admin_policy
+Risk     : High
+Confidence: High: 98%  |  Low: 0%  |  Medium: 2%
+Reason   : IAM action is a wildcard (*); IAM resource is a wildcard (*).
+-----------------------------------------------------------------
+
+Resource : aws_db_instance.unsafe_db
+Risk     : High
+Confidence: High: 100%  |  Low: 0%  |  Medium: 0%
+Reason   : the database is publicly accessible; storage encryption is disabled.
+-----------------------------------------------------------------
+
+Resource : aws_s3_bucket.app_logs
+Risk     : Low
+Confidence: High: 0%  |  Low: 77%  |  Medium: 23%
+Reason   : No high-risk indicators detected.
+-----------------------------------------------------------------
+
+Resource : aws_db_instance.reporting_db
+Risk     : Medium
+Confidence: High: 3%  |  Low: 5%  |  Medium: 93%
+Reason   : the database is publicly accessible.
+-----------------------------------------------------------------
+
+Resource : aws_s3_bucket.private_data
+Risk     : Low
+Confidence: High: 0%  |  Low: 77%  |  Medium: 23%
+Reason   : No high-risk indicators detected.
+-----------------------------------------------------------------
+
+Resource : aws_s3_bucket_public_access_block.private_data_block
+Risk     : Low
+Confidence: High: 0%  |  Low: 77%  |  Medium: 23%
+Reason   : No high-risk indicators detected.
+-----------------------------------------------------------------
+
+Resource : aws_iam_policy.readonly_s3
+Risk     : Low
+Confidence: High: 0%  |  Low: 77%  |  Medium: 23%
+Reason   : No high-risk indicators detected.
+-----------------------------------------------------------------
+
+Resource : aws_db_instance.secure_db
+Risk     : Low
+Confidence: High: 0%  |  Low: 77%  |  Medium: 23%
+Reason   : No high-risk indicators detected.
+-----------------------------------------------------------------
+
+Summary: High=3  Medium=1  Low=5

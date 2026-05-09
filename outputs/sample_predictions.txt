@@ -1,0 +1,41 @@
+Terraform Security Misconfiguration Detector – Sample Predictions
+=================================================================
+
+Demo: High Risk – SSH + open CIDR
+Risk Level  : High
+Confidence  : High: 100.0%  |  Low: 0.0%  |  Medium: 0.0%
+Reason      : CIDR range is open to the entire internet (0.0.0.0/0); SSH (port 22) is exposed.
+Triggered   : has_open_cidr, has_ssh_open
+Indicators  : 2
+-----------------------------------------------------------------
+
+Demo: High Risk – IAM wildcard
+Risk Level  : High
+Confidence  : High: 98.5%  |  Low: 0.0%  |  Medium: 1.5%
+Reason      : IAM action is a wildcard (*); IAM resource is a wildcard (*).
+Triggered   : has_wildcard_iam_action, has_wildcard_iam_resource
+Indicators  : 2
+-----------------------------------------------------------------
+
+Demo: Medium Risk – RDS public but encrypted
+Risk Level  : Medium
+Confidence  : High: 2.7%  |  Low: 4.5%  |  Medium: 92.8%
+Reason      : the database is publicly accessible.
+Triggered   : has_public_database
+Indicators  : 1
+-----------------------------------------------------------------
+
+Demo: Low Risk – private RDS, encrypted, multi-AZ
+Risk Level  : Low
+Confidence  : High: 0.1%  |  Low: 76.8%  |  Medium: 23.2%
+Reason      : No high-risk indicators detected.
+Indicators  : 0
+-----------------------------------------------------------------
+
+Demo: Low Risk – S3 with full public access block
+Risk Level  : Low
+Confidence  : High: 0.1%  |  Low: 76.8%  |  Medium: 23.2%
+Reason      : No high-risk indicators detected.
+Indicators  : 0
+-----------------------------------------------------------------
+

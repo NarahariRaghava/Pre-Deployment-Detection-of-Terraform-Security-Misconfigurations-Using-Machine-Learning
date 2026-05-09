@@ -1,0 +1,212 @@
+{
+  "source_file": "data/sample_tf/example.tf",
+  "results": [
+    {
+      "resource_type": "aws_security_group",
+      "resource_name": "open_ssh",
+      "risk_level": "High",
+      "probabilities": {
+        "High": 1.0,
+        "Low": 0.0,
+        "Medium": 0.0
+      },
+      "reason": "CIDR range is open to the entire internet (0.0.0.0/0); SSH (port 22) is exposed.",
+      "features": {
+        "has_open_cidr": 1,
+        "has_ssh_open": 1,
+        "has_rdp_open": 0,
+        "has_db_port_open": 0,
+        "has_public_database": 0,
+        "has_encryption_disabled": 0,
+        "has_wildcard_iam_action": 0,
+        "has_wildcard_iam_resource": 0,
+        "has_s3_public_risk": 0,
+        "count_sensitive_indicators": 2
+      }
+    },
+    {
+      "resource_type": "aws_iam_policy",
+      "resource_name": "admin_policy",
+      "risk_level": "High",
+      "probabilities": {
+        "High": 0.9846,
+        "Low": 0.0,
+        "Medium": 0.0154
+      },
+      "reason": "IAM action is a wildcard (*); IAM resource is a wildcard (*).",
+      "features": {
+        "has_open_cidr": 0,
+        "has_ssh_open": 0,
+        "has_rdp_open": 0,
+        "has_db_port_open": 0,
+        "has_public_database": 0,
+        "has_encryption_disabled": 0,
+        "has_wildcard_iam_action": 1,
+        "has_wildcard_iam_resource": 1,
+        "has_s3_public_risk": 0,
+        "count_sensitive_indicators": 2
+      }
+    },
+    {
+      "resource_type": "aws_db_instance",
+      "resource_name": "unsafe_db",
+      "risk_level": "High",
+      "probabilities": {
+        "High": 1.0,
+        "Low": 0.0,
+        "Medium": 0.0
+      },
+      "reason": "the database is publicly accessible; storage encryption is disabled.",
+      "features": {
+        "has_open_cidr": 0,
+        "has_ssh_open": 0,
+        "has_rdp_open": 0,
+        "has_db_port_open": 0,
+        "has_public_database": 1,
+        "has_encryption_disabled": 1,
+        "has_wildcard_iam_action": 0,
+        "has_wildcard_iam_resource": 0,
+        "has_s3_public_risk": 0,
+        "count_sensitive_indicators": 2
+      }
+    },
+    {
+      "resource_type": "aws_s3_bucket",
+      "resource_name": "app_logs",
+      "risk_level": "Low",
+      "probabilities": {
+        "High": 0.0006,
+        "Low": 0.7679,
+        "Medium": 0.2315
+      },
+      "reason": "No high-risk indicators detected.",
+      "features": {
+        "has_open_cidr": 0,
+        "has_ssh_open": 0,
+        "has_rdp_open": 0,
+        "has_db_port_open": 0,
+        "has_public_database": 0,
+        "has_encryption_disabled": 0,
+        "has_wildcard_iam_action": 0,
+        "has_wildcard_iam_resource": 0,
+        "has_s3_public_risk": 0,
+        "count_sensitive_indicators": 0
+      }
+    },
+    {
+      "resource_type": "aws_db_instance",
+      "resource_name": "reporting_db",
+      "risk_level": "Medium",
+      "probabilities": {
+        "High": 0.0266,
+        "Low": 0.0454,
+        "Medium": 0.928
+      },
+      "reason": "the database is publicly accessible.",
+      "features": {
+        "has_open_cidr": 0,
+        "has_ssh_open": 0,
+        "has_rdp_open": 0,
+        "has_db_port_open": 0,
+        "has_public_database": 1,
+        "has_encryption_disabled": 0,
+        "has_wildcard_iam_action": 0,
+        "has_wildcard_iam_resource": 0,
+        "has_s3_public_risk": 0,
+        "count_sensitive_indicators": 1
+      }
+    },
+    {
+      "resource_type": "aws_s3_bucket",
+      "resource_name": "private_data",
+      "risk_level": "Low",
+      "probabilities": {
+        "High": 0.0006,
+        "Low": 0.7679,
+        "Medium": 0.2315
+      },
+      "reason": "No high-risk indicators detected.",
+      "features": {
+        "has_open_cidr": 0,
+        "has_ssh_open": 0,
+        "has_rdp_open": 0,
+        "has_db_port_open": 0,
+        "has_public_database": 0,
+        "has_encryption_disabled": 0,
+        "has_wildcard_iam_action": 0,
+        "has_wildcard_iam_resource": 0,
+        "has_s3_public_risk": 0,
+        "count_sensitive_indicators": 0
+      }
+    },
+    {
+      "resource_type": "aws_s3_bucket_public_access_block",
+      "resource_name": "private_data_block",
+      "risk_level": "Low",
+      "probabilities": {
+        "High": 0.0006,
+        "Low": 0.7679,
+        "Medium": 0.2315
+      },
+      "reason": "No high-risk indicators detected.",
+      "features": {
+        "has_open_cidr": 0,
+        "has_ssh_open": 0,
+        "has_rdp_open": 0,
+        "has_db_port_open": 0,
+        "has_public_database": 0,
+        "has_encryption_disabled": 0,
+        "has_wildcard_iam_action": 0,
+        "has_wildcard_iam_resource": 0,
+        "has_s3_public_risk": 0,
+        "count_sensitive_indicators": 0
+      }
+    },
+    {
+      "resource_type": "aws_iam_policy",
+      "resource_name": "readonly_s3",
+      "risk_level": "Low",
+      "probabilities": {
+        "High": 0.0006,
+        "Low": 0.7679,
+        "Medium": 0.2315
+      },
+      "reason": "No high-risk indicators detected.",
+      "features": {
+        "has_open_cidr": 0,
+        "has_ssh_open": 0,
+        "has_rdp_open": 0,
+        "has_db_port_open": 0,
+        "has_public_database": 0,
+        "has_encryption_disabled": 0,
+        "has_wildcard_iam_action": 0,
+        "has_wildcard_iam_resource": 0,
+        "has_s3_public_risk": 0,
+        "count_sensitive_indicators": 0
+      }
+    },
+    {
+      "resource_type": "aws_db_instance",
+      "resource_name": "secure_db",
+      "risk_level": "Low",
+      "probabilities": {
+        "High": 0.0006,
+        "Low": 0.7679,
+        "Medium": 0.2315
+      },
+      "reason": "No high-risk indicators detected.",
+      "features": {
+        "has_open_cidr": 0,
+        "has_ssh_open": 0,
+        "has_rdp_open": 0,
+        "has_db_port_open": 0,
+        "has_public_database": 0,
+        "has_encryption_disabled": 0,
+        "has_wildcard_iam_action": 0,
+        "has_wildcard_iam_resource": 0,
+        "has_s3_public_risk": 0,
+        "count_sensitive_indicators": 0
+      }
+    }
+  ]
+}

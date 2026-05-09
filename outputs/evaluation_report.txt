@@ -1,0 +1,32 @@
+Terraform Security Misconfiguration Detector – Evaluation Report
+=================================================================
+Dataset size : 240 rows  |  Test fraction : 0.25
+Random state : 42
+
+Model : RandomForest
+Accuracy : 0.7333
+              precision    recall  f1-score   support
+
+        High       1.00      0.90      0.95        20
+         Low       0.62      0.80      0.70        20
+      Medium       0.62      0.50      0.56        20
+
+    accuracy                           0.73        60
+   macro avg       0.75      0.73      0.73        60
+weighted avg       0.75      0.73      0.73        60
+
+-----------------------------------------------------------------
+
+Model : DecisionTree
+Accuracy : 0.7333
+              precision    recall  f1-score   support
+
+        High       1.00      0.90      0.95        20
+         Low       0.62      0.80      0.70        20
+      Medium       0.62      0.50      0.56        20
+
+    accuracy                           0.73        60
+   macro avg       0.75      0.73      0.73        60
+weighted avg       0.75      0.73      0.73        60
+
+-----------------------------------------------------------------

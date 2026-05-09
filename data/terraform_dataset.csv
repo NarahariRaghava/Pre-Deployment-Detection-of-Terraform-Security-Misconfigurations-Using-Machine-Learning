@@ -1,0 +1,2271 @@
+terraform_snippet,risk_label
+"resource ""aws_db_instance"" ""unsafe_db"" {
+  identifier        = ""unsafe-db""
+  engine            = ""mysql""
+  instance_class    = ""db.t3.micro""
+  publicly_accessible = true
+  storage_encrypted = false
+  username          = ""admin""
+  password          = ""password123""
+}",High
+"resource ""aws_security_group"" ""web_server"" {
+  name = ""web-server""
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+}",Medium
+"resource ""aws_security_group"" ""open_ssh"" {
+  name = ""open-ssh""
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+}",High
+"resource ""aws_s3_bucket"" ""public_bucket"" {
+  bucket = ""my-public-bucket""
+}
+resource ""aws_s3_bucket_acl"" ""public_acl"" {
+  bucket = aws_s3_bucket.public_bucket.id
+  acl    = ""public-read-write""
+}",High
+"resource ""aws_security_group"" ""restricted_ssh"" {
+  name = ""restricted-ssh""
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = ""tcp""
+    cidr_blocks = [""203.0.113.10/32""]
+  }
+}",Low
+"resource ""aws_security_group_rule"" ""rdp_internal"" {
+  type        = ""ingress""
+  from_port   = 3389
+  to_port     = 3389
+  protocol    = ""tcp""
+  cidr_blocks = [""192.168.0.0/16""]
+  security_group_id = aws_security_group.windows.id
+}",Medium
+"resource ""aws_db_instance"" ""safe_db"" {
+  identifier           = ""safe-db""
+  engine               = ""mysql""
+  instance_class       = ""db.t3.micro""
+  publicly_accessible  = false
+  storage_encrypted    = true
+  multi_az             = true
+  backup_retention_period = 7
+}",Low
+"resource ""aws_db_instance"" ""safe_db"" {
+  identifier           = ""safe-db""
+  engine               = ""mysql""
+  instance_class       = ""db.t3.micro""
+  publicly_accessible  = false
+  storage_encrypted    = true
+  multi_az             = true
+  backup_retention_period = 7
+}",Low
+"resource ""aws_security_group"" ""egress_only_https"" {
+  name = ""egress-only-https""
+  egress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+}",Low
+"resource ""aws_db_instance"" ""semi_safe_db"" {
+  identifier        = ""semi-safe""
+  engine            = ""mysql""
+  instance_class    = ""db.t3.micro""
+  publicly_accessible = true
+  storage_encrypted = true
+}",Medium
+"resource ""aws_security_group"" ""open_ssh"" {
+  name = ""open-ssh""
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+}",High
+"resource ""aws_security_group"" ""https_restricted"" {
+  name = ""https-only""
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = ""tcp""
+    cidr_blocks = [""10.0.0.0/16""]
+  }
+}",Low
+"resource ""aws_iam_policy"" ""cw_logs"" {
+  name = ""cloudwatch-logs-write""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = [""logs:CreateLogStream"", ""logs:PutLogEvents""]
+      Resource = ""arn:aws:logs:us-east-1:123456789012:log-group:/app/prod:*""
+    }]
+  })
+}",Low
+"resource ""aws_security_group"" ""office_ssh"" {
+  name = ""office-ssh""
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = ""tcp""
+    cidr_blocks = [""10.0.0.0/8""]
+  }
+}",Medium
+"resource ""aws_security_group"" ""http_open"" {
+  name = ""http-open""
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+}",Medium
+"resource ""aws_security_group_rule"" ""db_vpc_only"" {
+  type        = ""ingress""
+  from_port   = 3306
+  to_port     = 3306
+  protocol    = ""tcp""
+  cidr_blocks = [""172.16.0.0/12""]
+  security_group_id = aws_security_group.db_sg.id
+}",Medium
+"resource ""aws_iam_policy"" ""s3_read_all"" {
+  name = ""s3-read-all""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = [""s3:GetObject"", ""s3:ListBucket""]
+      Resource = ""*""
+    }]
+  })
+}",Medium
+"resource ""aws_security_group"" ""https_restricted"" {
+  name = ""https-only""
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = ""tcp""
+    cidr_blocks = [""10.0.0.0/16""]
+  }
+}",Low
+"resource ""aws_s3_bucket"" ""private_bucket"" {
+  bucket = ""my-private-bucket""
+}
+resource ""aws_s3_bucket_public_access_block"" ""block"" {
+  bucket                  = aws_s3_bucket.private_bucket.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}",Low
+"resource ""aws_iam_policy"" ""readonly_policy"" {
+  name = ""readonly-policy""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = [""s3:GetObject"", ""s3:ListBucket""]
+      Resource = ""arn:aws:s3:::my-specific-bucket/*""
+    }]
+  })
+}",Low
+"resource ""aws_s3_bucket"" ""internal_logs"" {
+  bucket = ""internal-audit-logs""
+}
+resource ""aws_s3_bucket_acl"" ""private_acl"" {
+  bucket = aws_s3_bucket.internal_logs.id
+  acl    = ""private""
+}",Low
+"resource ""aws_security_group"" ""https_restricted"" {
+  name = ""https-only""
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = ""tcp""
+    cidr_blocks = [""10.0.0.0/16""]
+  }
+}",Low
+"resource ""aws_security_group"" ""open_rdp"" {
+  name = ""open-rdp""
+  ingress {
+    from_port   = 3389
+    to_port     = 3389
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+}",High
+"resource ""aws_security_group"" ""web_server"" {
+  name = ""web-server""
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+}",Medium
+"resource ""aws_db_instance"" ""pg_unsafe"" {
+  identifier        = ""pg-unsafe""
+  engine            = ""postgres""
+  instance_class    = ""db.t3.small""
+  publicly_accessible = true
+  storage_encrypted = false
+  port              = 5432
+}",High
+"resource ""aws_security_group"" ""open_ssh"" {
+  name = ""open-ssh""
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+}",High
+"resource ""aws_security_group"" ""office_ssh"" {
+  name = ""office-ssh""
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = ""tcp""
+    cidr_blocks = [""10.0.0.0/8""]
+  }
+}",Medium
+"resource ""aws_db_instance"" ""replica_db"" {
+  identifier            = ""replica-db""
+  engine                = ""mysql""
+  instance_class        = ""db.t3.medium""
+  publicly_accessible   = false
+  storage_encrypted     = true
+  copy_tags_to_snapshot = true
+}",Low
+"resource ""aws_s3_bucket"" ""internal_logs"" {
+  bucket = ""internal-audit-logs""
+}
+resource ""aws_s3_bucket_acl"" ""private_acl"" {
+  bucket = aws_s3_bucket.internal_logs.id
+  acl    = ""private""
+}",Low
+"resource ""aws_security_group"" ""open_rdp"" {
+  name = ""open-rdp""
+  ingress {
+    from_port   = 3389
+    to_port     = 3389
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+}",High
+"resource ""aws_iam_policy"" ""ec2_describe"" {
+  name = ""ec2-describe-only""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = [""ec2:DescribeInstances"", ""ec2:DescribeSecurityGroups""]
+      Resource = ""arn:aws:ec2:us-east-1:123456789012:instance/*""
+    }]
+  })
+}",Low
+"resource ""aws_s3_bucket"" ""data_bucket"" {
+  bucket = ""company-data-public""
+  acl    = ""public-read""
+}",High
+"resource ""aws_iam_policy"" ""ec2_s3_all"" {
+  name = ""ec2-s3-all""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = [""ec2:*"", ""s3:*""]
+      Resource = ""*""
+    }]
+  })
+}",High
+"resource ""aws_s3_bucket"" ""private_bucket"" {
+  bucket = ""my-private-bucket""
+}
+resource ""aws_s3_bucket_public_access_block"" ""block"" {
+  bucket                  = aws_s3_bucket.private_bucket.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}",Low
+"resource ""aws_s3_bucket"" ""encrypted_no_block"" {
+  bucket = ""encrypted-no-block""
+}
+resource ""aws_s3_bucket_server_side_encryption_configuration"" ""enc"" {
+  bucket = aws_s3_bucket.encrypted_no_block.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = ""AES256""
+    }
+  }
+}",Medium
+"resource ""aws_security_group_rule"" ""pg_internal"" {
+  type        = ""ingress""
+  from_port   = 5432
+  to_port     = 5432
+  protocol    = ""tcp""
+  cidr_blocks = [""10.0.0.0/16""]
+  security_group_id = aws_security_group.app_sg.id
+}",Medium
+"resource ""aws_iam_policy"" ""ec2_describe"" {
+  name = ""ec2-describe-only""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = [""ec2:DescribeInstances"", ""ec2:DescribeSecurityGroups""]
+      Resource = ""arn:aws:ec2:us-east-1:123456789012:instance/*""
+    }]
+  })
+}",Low
+"resource ""aws_s3_bucket"" ""public_bucket"" {
+  bucket = ""my-public-bucket""
+}
+resource ""aws_s3_bucket_acl"" ""public_acl"" {
+  bucket = aws_s3_bucket.public_bucket.id
+  acl    = ""public-read-write""
+}",High
+"resource ""aws_s3_bucket"" ""secure_bucket"" {
+  bucket = ""secure-data-bucket""
+}
+resource ""aws_s3_bucket_public_access_block"" ""secure_block"" {
+  bucket                  = aws_s3_bucket.secure_bucket.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+resource ""aws_s3_bucket_server_side_encryption_configuration"" ""secure_enc"" {
+  bucket = aws_s3_bucket.secure_bucket.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = ""aws:kms""
+    }
+  }
+}",Low
+"resource ""aws_db_instance"" ""prod_db"" {
+  identifier              = ""prod-db""
+  engine                  = ""postgres""
+  engine_version          = ""14.5""
+  instance_class          = ""db.m5.large""
+  publicly_accessible     = false
+  storage_encrypted       = true
+  multi_az                = true
+  deletion_protection     = true
+  backup_retention_period = 30
+}",Low
+"resource ""aws_security_group"" ""http_open"" {
+  name = ""http-open""
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+}",Medium
+"resource ""aws_iam_policy"" ""dynamo_scoped"" {
+  name = ""dynamo-scoped""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = [""dynamodb:GetItem"", ""dynamodb:PutItem"", ""dynamodb:Query""]
+      Resource = ""arn:aws:dynamodb:us-east-1:123456789012:table/MyTable""
+    }]
+  })
+}",Low
+"resource ""aws_security_group"" ""app_sg"" {
+  name = ""app-sg""
+  ingress {
+    from_port       = 8080
+    to_port         = 8080
+    protocol        = ""tcp""
+    security_groups = [aws_security_group.alb_sg.id]
+  }
+}",Low
+"resource ""aws_security_group_rule"" ""db_vpc_only"" {
+  type        = ""ingress""
+  from_port   = 3306
+  to_port     = 3306
+  protocol    = ""tcp""
+  cidr_blocks = [""172.16.0.0/12""]
+  security_group_id = aws_security_group.db_sg.id
+}",Medium
+"resource ""aws_db_instance"" ""unsafe_db"" {
+  identifier        = ""unsafe-db""
+  engine            = ""mysql""
+  instance_class    = ""db.t3.micro""
+  publicly_accessible = true
+  storage_encrypted = false
+  username          = ""admin""
+  password          = ""password123""
+}",High
+"resource ""aws_s3_bucket"" ""internal_logs"" {
+  bucket = ""internal-audit-logs""
+}
+resource ""aws_s3_bucket_acl"" ""private_acl"" {
+  bucket = aws_s3_bucket.internal_logs.id
+  acl    = ""private""
+}",Low
+"resource ""aws_iam_policy"" ""dynamo_scoped"" {
+  name = ""dynamo-scoped""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = [""dynamodb:GetItem"", ""dynamodb:PutItem"", ""dynamodb:Query""]
+      Resource = ""arn:aws:dynamodb:us-east-1:123456789012:table/MyTable""
+    }]
+  })
+}",Low
+"resource ""aws_db_instance"" ""no_encrypt_db"" {
+  identifier      = ""no-encrypt""
+  engine          = ""postgres""
+  instance_class  = ""db.t3.micro""
+  storage_encrypted = false
+  multi_az        = false
+  publicly_accessible = false
+}",Medium
+"resource ""aws_iam_policy"" ""ec2_broad"" {
+  name = ""ec2-broad""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = ""ec2:*""
+      Resource = ""arn:aws:ec2:us-east-1:123456789012:instance/*""
+    }]
+  })
+}",Medium
+"resource ""aws_db_instance"" ""safe_db"" {
+  identifier           = ""safe-db""
+  engine               = ""mysql""
+  instance_class       = ""db.t3.micro""
+  publicly_accessible  = false
+  storage_encrypted    = true
+  multi_az             = true
+  backup_retention_period = 7
+}",Low
+"resource ""aws_security_group"" ""loose_egress"" {
+  name = ""loose-egress""
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = ""-1""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = ""tcp""
+    cidr_blocks = [""10.0.0.0/16""]
+  }
+}",Medium
+"resource ""aws_security_group"" ""http_open"" {
+  name = ""http-open""
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+}",Medium
+"resource ""aws_security_group"" ""all_open"" {
+  name = ""all-open""
+  ingress {
+    from_port   = 0
+    to_port     = 65535
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+}",High
+"resource ""aws_security_group_rule"" ""rdp_rule"" {
+  type              = ""ingress""
+  from_port         = 3389
+  to_port           = 3389
+  protocol          = ""tcp""
+  cidr_blocks       = [""0.0.0.0/0""]
+  security_group_id = aws_security_group.example.id
+}",High
+"resource ""aws_security_group"" ""egress_only_https"" {
+  name = ""egress-only-https""
+  egress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+}",Low
+"resource ""aws_security_group"" ""web_db_open"" {
+  name = ""web-db-open""
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+  ingress {
+    from_port   = 3306
+    to_port     = 3306
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+}",High
+"resource ""aws_security_group"" ""office_ssh"" {
+  name = ""office-ssh""
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = ""tcp""
+    cidr_blocks = [""10.0.0.0/8""]
+  }
+}",Medium
+"resource ""aws_db_instance"" ""semi_safe_db"" {
+  identifier        = ""semi-safe""
+  engine            = ""mysql""
+  instance_class    = ""db.t3.micro""
+  publicly_accessible = true
+  storage_encrypted = true
+}",Medium
+"resource ""aws_security_group"" ""loose_egress"" {
+  name = ""loose-egress""
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = ""-1""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = ""tcp""
+    cidr_blocks = [""10.0.0.0/16""]
+  }
+}",Medium
+"resource ""aws_security_group_rule"" ""db_open"" {
+  type        = ""ingress""
+  from_port   = 3306
+  to_port     = 3306
+  protocol    = ""tcp""
+  cidr_blocks = [""0.0.0.0/0""]
+  security_group_id = aws_security_group.db_sg.id
+}",High
+"resource ""aws_security_group"" ""https_restricted"" {
+  name = ""https-only""
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = ""tcp""
+    cidr_blocks = [""10.0.0.0/16""]
+  }
+}",Low
+"resource ""aws_s3_bucket"" ""internal_logs"" {
+  bucket = ""internal-audit-logs""
+}
+resource ""aws_s3_bucket_acl"" ""private_acl"" {
+  bucket = aws_s3_bucket.internal_logs.id
+  acl    = ""private""
+}",Low
+"resource ""aws_security_group"" ""egress_only_https"" {
+  name = ""egress-only-https""
+  egress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+}",Low
+"resource ""aws_security_group"" ""http_open"" {
+  name = ""http-open""
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+}",Medium
+"resource ""aws_iam_policy"" ""s3_specific"" {
+  name = ""s3-specific-wildcard""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = ""s3:*""
+      Resource = ""arn:aws:s3:::my-bucket/*""
+    }]
+  })
+}",Medium
+"resource ""aws_security_group"" ""loose_egress"" {
+  name = ""loose-egress""
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = ""-1""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = ""tcp""
+    cidr_blocks = [""10.0.0.0/16""]
+  }
+}",Medium
+"resource ""aws_db_instance"" ""replica_db"" {
+  identifier            = ""replica-db""
+  engine                = ""mysql""
+  instance_class        = ""db.t3.medium""
+  publicly_accessible   = false
+  storage_encrypted     = true
+  copy_tags_to_snapshot = true
+}",Low
+"resource ""aws_iam_policy"" ""readonly_policy"" {
+  name = ""readonly-policy""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = [""s3:GetObject"", ""s3:ListBucket""]
+      Resource = ""arn:aws:s3:::my-specific-bucket/*""
+    }]
+  })
+}",Low
+"resource ""aws_s3_bucket"" ""logs_bucket"" {
+  bucket = ""app-logs-bucket""
+}",Medium
+"resource ""aws_s3_bucket"" ""encrypted_no_block"" {
+  bucket = ""encrypted-no-block""
+}
+resource ""aws_s3_bucket_server_side_encryption_configuration"" ""enc"" {
+  bucket = aws_s3_bucket.encrypted_no_block.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = ""AES256""
+    }
+  }
+}",Medium
+"resource ""aws_db_instance"" ""no_backup"" {
+  identifier         = ""no-backup""
+  engine             = ""mysql""
+  instance_class     = ""db.t3.micro""
+  backup_retention_period = 0
+  storage_encrypted  = false
+  publicly_accessible = false
+}",Medium
+"resource ""aws_iam_policy"" ""readonly_policy"" {
+  name = ""readonly-policy""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = [""s3:GetObject"", ""s3:ListBucket""]
+      Resource = ""arn:aws:s3:::my-specific-bucket/*""
+    }]
+  })
+}",Low
+"resource ""aws_security_group"" ""app_sg"" {
+  name = ""app-sg""
+  ingress {
+    from_port       = 8080
+    to_port         = 8080
+    protocol        = ""tcp""
+    security_groups = [aws_security_group.alb_sg.id]
+  }
+}",Low
+"resource ""aws_security_group_rule"" ""rdp_rule"" {
+  type              = ""ingress""
+  from_port         = 3389
+  to_port           = 3389
+  protocol          = ""tcp""
+  cidr_blocks       = [""0.0.0.0/0""]
+  security_group_id = aws_security_group.example.id
+}",High
+"resource ""aws_security_group"" ""restricted_ssh"" {
+  name = ""restricted-ssh""
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = ""tcp""
+    cidr_blocks = [""203.0.113.10/32""]
+  }
+}",Low
+"resource ""aws_iam_policy"" ""cw_logs"" {
+  name = ""cloudwatch-logs-write""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = [""logs:CreateLogStream"", ""logs:PutLogEvents""]
+      Resource = ""arn:aws:logs:us-east-1:123456789012:log-group:/app/prod:*""
+    }]
+  })
+}",Low
+"resource ""aws_security_group_rule"" ""all_traffic"" {
+  type        = ""ingress""
+  from_port   = 0
+  to_port     = 0
+  protocol    = ""-1""
+  cidr_blocks = [""0.0.0.0/0""]
+  security_group_id = aws_security_group.sg.id
+}",High
+"resource ""aws_db_instance"" ""pg_unsafe"" {
+  identifier        = ""pg-unsafe""
+  engine            = ""postgres""
+  instance_class    = ""db.t3.small""
+  publicly_accessible = true
+  storage_encrypted = false
+  port              = 5432
+}",High
+"resource ""aws_iam_policy"" ""admin_policy"" {
+  name = ""admin-policy""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = ""*""
+      Resource = ""*""
+    }]
+  })
+}",High
+"resource ""aws_s3_bucket"" ""private_bucket"" {
+  bucket = ""my-private-bucket""
+}
+resource ""aws_s3_bucket_public_access_block"" ""block"" {
+  bucket                  = aws_s3_bucket.private_bucket.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}",Low
+"resource ""aws_security_group"" ""db_private"" {
+  name = ""db-private""
+  ingress {
+    from_port       = 5432
+    to_port         = 5432
+    protocol        = ""tcp""
+    security_groups = [aws_security_group.app_sg.id]
+  }
+}",Low
+"resource ""aws_iam_policy"" ""ec2_broad"" {
+  name = ""ec2-broad""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = ""ec2:*""
+      Resource = ""arn:aws:ec2:us-east-1:123456789012:instance/*""
+    }]
+  })
+}",Medium
+"resource ""aws_db_instance"" ""semi_safe_db"" {
+  identifier        = ""semi-safe""
+  engine            = ""mysql""
+  instance_class    = ""db.t3.micro""
+  publicly_accessible = true
+  storage_encrypted = true
+}",Medium
+"resource ""aws_iam_policy"" ""ec2_describe"" {
+  name = ""ec2-describe-only""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = [""ec2:DescribeInstances"", ""ec2:DescribeSecurityGroups""]
+      Resource = ""arn:aws:ec2:us-east-1:123456789012:instance/*""
+    }]
+  })
+}",Low
+"resource ""aws_iam_policy"" ""s3_wildcard"" {
+  name = ""s3-wildcard""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = ""s3:*""
+      Resource = ""*""
+    }]
+  })
+}",High
+"resource ""aws_db_instance"" ""main"" {
+  engine              = ""mysql""
+  instance_class      = ""db.m5.large""
+  publicly_accessible = true
+  storage_encrypted   = false
+  multi_az            = false
+}",High
+"resource ""aws_iam_policy"" ""admin_policy"" {
+  name = ""admin-policy""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = ""*""
+      Resource = ""*""
+    }]
+  })
+}",High
+"resource ""aws_iam_policy"" ""dynamo_scoped"" {
+  name = ""dynamo-scoped""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = [""dynamodb:GetItem"", ""dynamodb:PutItem"", ""dynamodb:Query""]
+      Resource = ""arn:aws:dynamodb:us-east-1:123456789012:table/MyTable""
+    }]
+  })
+}",Low
+"resource ""aws_security_group"" ""open_rdp"" {
+  name = ""open-rdp""
+  ingress {
+    from_port   = 3389
+    to_port     = 3389
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+}",High
+"resource ""aws_db_instance"" ""replica_db"" {
+  identifier            = ""replica-db""
+  engine                = ""mysql""
+  instance_class        = ""db.t3.medium""
+  publicly_accessible   = false
+  storage_encrypted     = true
+  copy_tags_to_snapshot = true
+}",Low
+"resource ""aws_iam_policy"" ""s3_specific"" {
+  name = ""s3-specific-wildcard""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = ""s3:*""
+      Resource = ""arn:aws:s3:::my-bucket/*""
+    }]
+  })
+}",Medium
+"resource ""aws_iam_policy"" ""ec2_broad"" {
+  name = ""ec2-broad""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = ""ec2:*""
+      Resource = ""arn:aws:ec2:us-east-1:123456789012:instance/*""
+    }]
+  })
+}",Medium
+"resource ""aws_iam_policy"" ""s3_read_all"" {
+  name = ""s3-read-all""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = [""s3:GetObject"", ""s3:ListBucket""]
+      Resource = ""*""
+    }]
+  })
+}",Medium
+"resource ""aws_iam_policy"" ""readonly_policy"" {
+  name = ""readonly-policy""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = [""s3:GetObject"", ""s3:ListBucket""]
+      Resource = ""arn:aws:s3:::my-specific-bucket/*""
+    }]
+  })
+}",Low
+"resource ""aws_security_group"" ""app_sg"" {
+  name = ""app-sg""
+  ingress {
+    from_port       = 8080
+    to_port         = 8080
+    protocol        = ""tcp""
+    security_groups = [aws_security_group.alb_sg.id]
+  }
+}",Low
+"resource ""aws_security_group"" ""db_private"" {
+  name = ""db-private""
+  ingress {
+    from_port       = 5432
+    to_port         = 5432
+    protocol        = ""tcp""
+    security_groups = [aws_security_group.app_sg.id]
+  }
+}",Low
+"resource ""aws_db_instance"" ""no_encrypt_db"" {
+  identifier      = ""no-encrypt""
+  engine          = ""postgres""
+  instance_class  = ""db.t3.micro""
+  storage_encrypted = false
+  multi_az        = false
+  publicly_accessible = false
+}",Medium
+"resource ""aws_db_instance"" ""prod_db"" {
+  identifier              = ""prod-db""
+  engine                  = ""postgres""
+  engine_version          = ""14.5""
+  instance_class          = ""db.m5.large""
+  publicly_accessible     = false
+  storage_encrypted       = true
+  multi_az                = true
+  deletion_protection     = true
+  backup_retention_period = 30
+}",Low
+"resource ""aws_iam_policy"" ""s3_wildcard"" {
+  name = ""s3-wildcard""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = ""s3:*""
+      Resource = ""*""
+    }]
+  })
+}",High
+"resource ""aws_iam_policy"" ""s3_read_all"" {
+  name = ""s3-read-all""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = [""s3:GetObject"", ""s3:ListBucket""]
+      Resource = ""*""
+    }]
+  })
+}",Medium
+"resource ""aws_db_instance"" ""unsafe_db"" {
+  identifier        = ""unsafe-db""
+  engine            = ""mysql""
+  instance_class    = ""db.t3.micro""
+  publicly_accessible = true
+  storage_encrypted = false
+  username          = ""admin""
+  password          = ""password123""
+}",High
+"resource ""aws_iam_policy"" ""ec2_broad"" {
+  name = ""ec2-broad""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = ""ec2:*""
+      Resource = ""arn:aws:ec2:us-east-1:123456789012:instance/*""
+    }]
+  })
+}",Medium
+"resource ""aws_security_group_rule"" ""pg_internal"" {
+  type        = ""ingress""
+  from_port   = 5432
+  to_port     = 5432
+  protocol    = ""tcp""
+  cidr_blocks = [""10.0.0.0/16""]
+  security_group_id = aws_security_group.app_sg.id
+}",Medium
+"resource ""aws_db_instance"" ""unsafe_db"" {
+  identifier        = ""unsafe-db""
+  engine            = ""mysql""
+  instance_class    = ""db.t3.micro""
+  publicly_accessible = true
+  storage_encrypted = false
+  username          = ""admin""
+  password          = ""password123""
+}",High
+"resource ""aws_iam_policy"" ""s3_wildcard"" {
+  name = ""s3-wildcard""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = ""s3:*""
+      Resource = ""*""
+    }]
+  })
+}",High
+"resource ""aws_s3_bucket"" ""private_bucket"" {
+  bucket = ""my-private-bucket""
+}
+resource ""aws_s3_bucket_public_access_block"" ""block"" {
+  bucket                  = aws_s3_bucket.private_bucket.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}",Low
+"resource ""aws_security_group_rule"" ""db_open"" {
+  type        = ""ingress""
+  from_port   = 3306
+  to_port     = 3306
+  protocol    = ""tcp""
+  cidr_blocks = [""0.0.0.0/0""]
+  security_group_id = aws_security_group.db_sg.id
+}",High
+"resource ""aws_db_instance"" ""semi_safe_db"" {
+  identifier        = ""semi-safe""
+  engine            = ""mysql""
+  instance_class    = ""db.t3.micro""
+  publicly_accessible = true
+  storage_encrypted = true
+}",Medium
+"resource ""aws_s3_bucket"" ""data_bucket"" {
+  bucket = ""company-data-public""
+  acl    = ""public-read""
+}",High
+"resource ""aws_s3_bucket"" ""secure_bucket"" {
+  bucket = ""secure-data-bucket""
+}
+resource ""aws_s3_bucket_public_access_block"" ""secure_block"" {
+  bucket                  = aws_s3_bucket.secure_bucket.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+resource ""aws_s3_bucket_server_side_encryption_configuration"" ""secure_enc"" {
+  bucket = aws_s3_bucket.secure_bucket.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = ""aws:kms""
+    }
+  }
+}",Low
+"resource ""aws_security_group"" ""web_db_open"" {
+  name = ""web-db-open""
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+  ingress {
+    from_port   = 3306
+    to_port     = 3306
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+}",High
+"resource ""aws_iam_policy"" ""s3_specific"" {
+  name = ""s3-specific-wildcard""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = ""s3:*""
+      Resource = ""arn:aws:s3:::my-bucket/*""
+    }]
+  })
+}",Medium
+"resource ""aws_security_group"" ""web_db_open"" {
+  name = ""web-db-open""
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+  ingress {
+    from_port   = 3306
+    to_port     = 3306
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+}",High
+"resource ""aws_s3_bucket"" ""encrypted_no_block"" {
+  bucket = ""encrypted-no-block""
+}
+resource ""aws_s3_bucket_server_side_encryption_configuration"" ""enc"" {
+  bucket = aws_s3_bucket.encrypted_no_block.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = ""AES256""
+    }
+  }
+}",Medium
+"resource ""aws_security_group_rule"" ""all_traffic"" {
+  type        = ""ingress""
+  from_port   = 0
+  to_port     = 0
+  protocol    = ""-1""
+  cidr_blocks = [""0.0.0.0/0""]
+  security_group_id = aws_security_group.sg.id
+}",High
+"resource ""aws_security_group_rule"" ""rdp_internal"" {
+  type        = ""ingress""
+  from_port   = 3389
+  to_port     = 3389
+  protocol    = ""tcp""
+  cidr_blocks = [""192.168.0.0/16""]
+  security_group_id = aws_security_group.windows.id
+}",Medium
+"resource ""aws_security_group"" ""web_db_open"" {
+  name = ""web-db-open""
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+  ingress {
+    from_port   = 3306
+    to_port     = 3306
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+}",High
+"resource ""aws_security_group_rule"" ""rdp_rule"" {
+  type              = ""ingress""
+  from_port         = 3389
+  to_port           = 3389
+  protocol          = ""tcp""
+  cidr_blocks       = [""0.0.0.0/0""]
+  security_group_id = aws_security_group.example.id
+}",High
+"resource ""aws_security_group_rule"" ""rdp_internal"" {
+  type        = ""ingress""
+  from_port   = 3389
+  to_port     = 3389
+  protocol    = ""tcp""
+  cidr_blocks = [""192.168.0.0/16""]
+  security_group_id = aws_security_group.windows.id
+}",Medium
+"resource ""aws_security_group_rule"" ""db_open"" {
+  type        = ""ingress""
+  from_port   = 3306
+  to_port     = 3306
+  protocol    = ""tcp""
+  cidr_blocks = [""0.0.0.0/0""]
+  security_group_id = aws_security_group.db_sg.id
+}",High
+"resource ""aws_db_instance"" ""safe_db"" {
+  identifier           = ""safe-db""
+  engine               = ""mysql""
+  instance_class       = ""db.t3.micro""
+  publicly_accessible  = false
+  storage_encrypted    = true
+  multi_az             = true
+  backup_retention_period = 7
+}",Low
+"resource ""aws_db_instance"" ""unsafe_db"" {
+  identifier        = ""unsafe-db""
+  engine            = ""mysql""
+  instance_class    = ""db.t3.micro""
+  publicly_accessible = true
+  storage_encrypted = false
+  username          = ""admin""
+  password          = ""password123""
+}",High
+"resource ""aws_iam_policy"" ""s3_wildcard"" {
+  name = ""s3-wildcard""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = ""s3:*""
+      Resource = ""*""
+    }]
+  })
+}",High
+"resource ""aws_security_group"" ""loose_egress"" {
+  name = ""loose-egress""
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = ""-1""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = ""tcp""
+    cidr_blocks = [""10.0.0.0/16""]
+  }
+}",Medium
+"resource ""aws_iam_policy"" ""s3_wildcard"" {
+  name = ""s3-wildcard""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = ""s3:*""
+      Resource = ""*""
+    }]
+  })
+}",High
+"resource ""aws_iam_policy"" ""ec2_s3_all"" {
+  name = ""ec2-s3-all""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = [""ec2:*"", ""s3:*""]
+      Resource = ""*""
+    }]
+  })
+}",High
+"resource ""aws_iam_policy"" ""ec2_s3_all"" {
+  name = ""ec2-s3-all""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = [""ec2:*"", ""s3:*""]
+      Resource = ""*""
+    }]
+  })
+}",High
+"resource ""aws_db_instance"" ""pg_unsafe"" {
+  identifier        = ""pg-unsafe""
+  engine            = ""postgres""
+  instance_class    = ""db.t3.small""
+  publicly_accessible = true
+  storage_encrypted = false
+  port              = 5432
+}",High
+"resource ""aws_security_group"" ""open_rdp"" {
+  name = ""open-rdp""
+  ingress {
+    from_port   = 3389
+    to_port     = 3389
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+}",High
+"resource ""aws_db_instance"" ""no_backup"" {
+  identifier         = ""no-backup""
+  engine             = ""mysql""
+  instance_class     = ""db.t3.micro""
+  backup_retention_period = 0
+  storage_encrypted  = false
+  publicly_accessible = false
+}",Medium
+"resource ""aws_security_group"" ""office_ssh"" {
+  name = ""office-ssh""
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = ""tcp""
+    cidr_blocks = [""10.0.0.0/8""]
+  }
+}",Medium
+"resource ""aws_security_group"" ""open_rdp"" {
+  name = ""open-rdp""
+  ingress {
+    from_port   = 3389
+    to_port     = 3389
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+}",High
+"resource ""aws_security_group"" ""all_open"" {
+  name = ""all-open""
+  ingress {
+    from_port   = 0
+    to_port     = 65535
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+}",High
+"resource ""aws_security_group_rule"" ""pg_internal"" {
+  type        = ""ingress""
+  from_port   = 5432
+  to_port     = 5432
+  protocol    = ""tcp""
+  cidr_blocks = [""10.0.0.0/16""]
+  security_group_id = aws_security_group.app_sg.id
+}",Medium
+"resource ""aws_s3_bucket"" ""secure_bucket"" {
+  bucket = ""secure-data-bucket""
+}
+resource ""aws_s3_bucket_public_access_block"" ""secure_block"" {
+  bucket                  = aws_s3_bucket.secure_bucket.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+resource ""aws_s3_bucket_server_side_encryption_configuration"" ""secure_enc"" {
+  bucket = aws_s3_bucket.secure_bucket.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = ""aws:kms""
+    }
+  }
+}",Low
+"resource ""aws_security_group_rule"" ""all_traffic"" {
+  type        = ""ingress""
+  from_port   = 0
+  to_port     = 0
+  protocol    = ""-1""
+  cidr_blocks = [""0.0.0.0/0""]
+  security_group_id = aws_security_group.sg.id
+}",High
+"resource ""aws_iam_policy"" ""s3_read_all"" {
+  name = ""s3-read-all""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = [""s3:GetObject"", ""s3:ListBucket""]
+      Resource = ""*""
+    }]
+  })
+}",Medium
+"resource ""aws_iam_policy"" ""ec2_s3_all"" {
+  name = ""ec2-s3-all""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = [""ec2:*"", ""s3:*""]
+      Resource = ""*""
+    }]
+  })
+}",High
+"resource ""aws_security_group_rule"" ""all_traffic"" {
+  type        = ""ingress""
+  from_port   = 0
+  to_port     = 0
+  protocol    = ""-1""
+  cidr_blocks = [""0.0.0.0/0""]
+  security_group_id = aws_security_group.sg.id
+}",High
+"resource ""aws_s3_bucket"" ""secure_bucket"" {
+  bucket = ""secure-data-bucket""
+}
+resource ""aws_s3_bucket_public_access_block"" ""secure_block"" {
+  bucket                  = aws_s3_bucket.secure_bucket.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+resource ""aws_s3_bucket_server_side_encryption_configuration"" ""secure_enc"" {
+  bucket = aws_s3_bucket.secure_bucket.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = ""aws:kms""
+    }
+  }
+}",Low
+"resource ""aws_security_group_rule"" ""rdp_internal"" {
+  type        = ""ingress""
+  from_port   = 3389
+  to_port     = 3389
+  protocol    = ""tcp""
+  cidr_blocks = [""192.168.0.0/16""]
+  security_group_id = aws_security_group.windows.id
+}",Medium
+"resource ""aws_db_instance"" ""no_encrypt_db"" {
+  identifier      = ""no-encrypt""
+  engine          = ""postgres""
+  instance_class  = ""db.t3.micro""
+  storage_encrypted = false
+  multi_az        = false
+  publicly_accessible = false
+}",Medium
+"resource ""aws_iam_policy"" ""s3_read_all"" {
+  name = ""s3-read-all""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = [""s3:GetObject"", ""s3:ListBucket""]
+      Resource = ""*""
+    }]
+  })
+}",Medium
+"resource ""aws_security_group"" ""open_ssh"" {
+  name = ""open-ssh""
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+}",High
+"resource ""aws_security_group"" ""restricted_ssh"" {
+  name = ""restricted-ssh""
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = ""tcp""
+    cidr_blocks = [""203.0.113.10/32""]
+  }
+}",Low
+"resource ""aws_security_group"" ""all_open"" {
+  name = ""all-open""
+  ingress {
+    from_port   = 0
+    to_port     = 65535
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+}",High
+"resource ""aws_s3_bucket"" ""secure_bucket"" {
+  bucket = ""secure-data-bucket""
+}
+resource ""aws_s3_bucket_public_access_block"" ""secure_block"" {
+  bucket                  = aws_s3_bucket.secure_bucket.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+resource ""aws_s3_bucket_server_side_encryption_configuration"" ""secure_enc"" {
+  bucket = aws_s3_bucket.secure_bucket.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = ""aws:kms""
+    }
+  }
+}",Low
+"resource ""aws_iam_policy"" ""ec2_describe"" {
+  name = ""ec2-describe-only""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = [""ec2:DescribeInstances"", ""ec2:DescribeSecurityGroups""]
+      Resource = ""arn:aws:ec2:us-east-1:123456789012:instance/*""
+    }]
+  })
+}",Low
+"resource ""aws_db_instance"" ""semi_safe_db"" {
+  identifier        = ""semi-safe""
+  engine            = ""mysql""
+  instance_class    = ""db.t3.micro""
+  publicly_accessible = true
+  storage_encrypted = true
+}",Medium
+"resource ""aws_s3_bucket"" ""data_bucket"" {
+  bucket = ""company-data-public""
+  acl    = ""public-read""
+}",High
+"resource ""aws_db_instance"" ""main"" {
+  engine              = ""mysql""
+  instance_class      = ""db.m5.large""
+  publicly_accessible = true
+  storage_encrypted   = false
+  multi_az            = false
+}",High
+"resource ""aws_security_group_rule"" ""rdp_rule"" {
+  type              = ""ingress""
+  from_port         = 3389
+  to_port           = 3389
+  protocol          = ""tcp""
+  cidr_blocks       = [""0.0.0.0/0""]
+  security_group_id = aws_security_group.example.id
+}",High
+"resource ""aws_s3_bucket"" ""encrypted_no_block"" {
+  bucket = ""encrypted-no-block""
+}
+resource ""aws_s3_bucket_server_side_encryption_configuration"" ""enc"" {
+  bucket = aws_s3_bucket.encrypted_no_block.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = ""AES256""
+    }
+  }
+}",Medium
+"resource ""aws_security_group"" ""restricted_ssh"" {
+  name = ""restricted-ssh""
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = ""tcp""
+    cidr_blocks = [""203.0.113.10/32""]
+  }
+}",Low
+"resource ""aws_s3_bucket"" ""public_bucket"" {
+  bucket = ""my-public-bucket""
+}
+resource ""aws_s3_bucket_acl"" ""public_acl"" {
+  bucket = aws_s3_bucket.public_bucket.id
+  acl    = ""public-read-write""
+}",High
+"resource ""aws_db_instance"" ""no_backup"" {
+  identifier         = ""no-backup""
+  engine             = ""mysql""
+  instance_class     = ""db.t3.micro""
+  backup_retention_period = 0
+  storage_encrypted  = false
+  publicly_accessible = false
+}",Medium
+"resource ""aws_security_group_rule"" ""db_vpc_only"" {
+  type        = ""ingress""
+  from_port   = 3306
+  to_port     = 3306
+  protocol    = ""tcp""
+  cidr_blocks = [""172.16.0.0/12""]
+  security_group_id = aws_security_group.db_sg.id
+}",Medium
+"resource ""aws_iam_policy"" ""ec2_broad"" {
+  name = ""ec2-broad""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = ""ec2:*""
+      Resource = ""arn:aws:ec2:us-east-1:123456789012:instance/*""
+    }]
+  })
+}",Medium
+"resource ""aws_security_group"" ""web_server"" {
+  name = ""web-server""
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+}",Medium
+"resource ""aws_db_instance"" ""replica_db"" {
+  identifier            = ""replica-db""
+  engine                = ""mysql""
+  instance_class        = ""db.t3.medium""
+  publicly_accessible   = false
+  storage_encrypted     = true
+  copy_tags_to_snapshot = true
+}",Low
+"resource ""aws_security_group"" ""restricted_ssh"" {
+  name = ""restricted-ssh""
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = ""tcp""
+    cidr_blocks = [""203.0.113.10/32""]
+  }
+}",Low
+"resource ""aws_db_instance"" ""semi_safe_db"" {
+  identifier        = ""semi-safe""
+  engine            = ""mysql""
+  instance_class    = ""db.t3.micro""
+  publicly_accessible = true
+  storage_encrypted = true
+}",Medium
+"resource ""aws_security_group"" ""db_private"" {
+  name = ""db-private""
+  ingress {
+    from_port       = 5432
+    to_port         = 5432
+    protocol        = ""tcp""
+    security_groups = [aws_security_group.app_sg.id]
+  }
+}",Low
+"resource ""aws_db_instance"" ""safe_db"" {
+  identifier           = ""safe-db""
+  engine               = ""mysql""
+  instance_class       = ""db.t3.micro""
+  publicly_accessible  = false
+  storage_encrypted    = true
+  multi_az             = true
+  backup_retention_period = 7
+}",Low
+"resource ""aws_security_group_rule"" ""db_vpc_only"" {
+  type        = ""ingress""
+  from_port   = 3306
+  to_port     = 3306
+  protocol    = ""tcp""
+  cidr_blocks = [""172.16.0.0/12""]
+  security_group_id = aws_security_group.db_sg.id
+}",Medium
+"resource ""aws_security_group_rule"" ""all_traffic"" {
+  type        = ""ingress""
+  from_port   = 0
+  to_port     = 0
+  protocol    = ""-1""
+  cidr_blocks = [""0.0.0.0/0""]
+  security_group_id = aws_security_group.sg.id
+}",High
+"resource ""aws_security_group_rule"" ""db_open"" {
+  type        = ""ingress""
+  from_port   = 3306
+  to_port     = 3306
+  protocol    = ""tcp""
+  cidr_blocks = [""0.0.0.0/0""]
+  security_group_id = aws_security_group.db_sg.id
+}",High
+"resource ""aws_db_instance"" ""main"" {
+  engine              = ""mysql""
+  instance_class      = ""db.m5.large""
+  publicly_accessible = true
+  storage_encrypted   = false
+  multi_az            = false
+}",High
+"resource ""aws_s3_bucket"" ""private_bucket"" {
+  bucket = ""my-private-bucket""
+}
+resource ""aws_s3_bucket_public_access_block"" ""block"" {
+  bucket                  = aws_s3_bucket.private_bucket.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}",Low
+"resource ""aws_iam_policy"" ""admin_policy"" {
+  name = ""admin-policy""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = ""*""
+      Resource = ""*""
+    }]
+  })
+}",High
+"resource ""aws_security_group"" ""https_restricted"" {
+  name = ""https-only""
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = ""tcp""
+    cidr_blocks = [""10.0.0.0/16""]
+  }
+}",Low
+"resource ""aws_iam_policy"" ""cw_logs"" {
+  name = ""cloudwatch-logs-write""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = [""logs:CreateLogStream"", ""logs:PutLogEvents""]
+      Resource = ""arn:aws:logs:us-east-1:123456789012:log-group:/app/prod:*""
+    }]
+  })
+}",Low
+"resource ""aws_db_instance"" ""no_backup"" {
+  identifier         = ""no-backup""
+  engine             = ""mysql""
+  instance_class     = ""db.t3.micro""
+  backup_retention_period = 0
+  storage_encrypted  = false
+  publicly_accessible = false
+}",Medium
+"resource ""aws_db_instance"" ""prod_db"" {
+  identifier              = ""prod-db""
+  engine                  = ""postgres""
+  engine_version          = ""14.5""
+  instance_class          = ""db.m5.large""
+  publicly_accessible     = false
+  storage_encrypted       = true
+  multi_az                = true
+  deletion_protection     = true
+  backup_retention_period = 30
+}",Low
+"resource ""aws_db_instance"" ""main"" {
+  engine              = ""mysql""
+  instance_class      = ""db.m5.large""
+  publicly_accessible = true
+  storage_encrypted   = false
+  multi_az            = false
+}",High
+"resource ""aws_s3_bucket"" ""logs_bucket"" {
+  bucket = ""app-logs-bucket""
+}",Medium
+"resource ""aws_s3_bucket"" ""data_bucket"" {
+  bucket = ""company-data-public""
+  acl    = ""public-read""
+}",High
+"resource ""aws_security_group"" ""web_server"" {
+  name = ""web-server""
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+}",Medium
+"resource ""aws_security_group_rule"" ""db_open"" {
+  type        = ""ingress""
+  from_port   = 3306
+  to_port     = 3306
+  protocol    = ""tcp""
+  cidr_blocks = [""0.0.0.0/0""]
+  security_group_id = aws_security_group.db_sg.id
+}",High
+"resource ""aws_s3_bucket"" ""logs_bucket"" {
+  bucket = ""app-logs-bucket""
+}",Medium
+"resource ""aws_security_group"" ""egress_only_https"" {
+  name = ""egress-only-https""
+  egress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+}",Low
+"resource ""aws_security_group"" ""restricted_ssh"" {
+  name = ""restricted-ssh""
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = ""tcp""
+    cidr_blocks = [""203.0.113.10/32""]
+  }
+}",Low
+"resource ""aws_s3_bucket"" ""encrypted_no_block"" {
+  bucket = ""encrypted-no-block""
+}
+resource ""aws_s3_bucket_server_side_encryption_configuration"" ""enc"" {
+  bucket = aws_s3_bucket.encrypted_no_block.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = ""AES256""
+    }
+  }
+}",Medium
+"resource ""aws_security_group"" ""open_ssh"" {
+  name = ""open-ssh""
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+}",High
+"resource ""aws_iam_policy"" ""s3_specific"" {
+  name = ""s3-specific-wildcard""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = ""s3:*""
+      Resource = ""arn:aws:s3:::my-bucket/*""
+    }]
+  })
+}",Medium
+"resource ""aws_security_group_rule"" ""db_vpc_only"" {
+  type        = ""ingress""
+  from_port   = 3306
+  to_port     = 3306
+  protocol    = ""tcp""
+  cidr_blocks = [""172.16.0.0/12""]
+  security_group_id = aws_security_group.db_sg.id
+}",Medium
+"resource ""aws_db_instance"" ""prod_db"" {
+  identifier              = ""prod-db""
+  engine                  = ""postgres""
+  engine_version          = ""14.5""
+  instance_class          = ""db.m5.large""
+  publicly_accessible     = false
+  storage_encrypted       = true
+  multi_az                = true
+  deletion_protection     = true
+  backup_retention_period = 30
+}",Low
+"resource ""aws_db_instance"" ""main"" {
+  engine              = ""mysql""
+  instance_class      = ""db.m5.large""
+  publicly_accessible = true
+  storage_encrypted   = false
+  multi_az            = false
+}",High
+"resource ""aws_security_group"" ""open_ssh"" {
+  name = ""open-ssh""
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+}",High
+"resource ""aws_security_group"" ""web_db_open"" {
+  name = ""web-db-open""
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+  ingress {
+    from_port   = 3306
+    to_port     = 3306
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+}",High
+"resource ""aws_iam_policy"" ""admin_policy"" {
+  name = ""admin-policy""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = ""*""
+      Resource = ""*""
+    }]
+  })
+}",High
+"resource ""aws_security_group"" ""office_ssh"" {
+  name = ""office-ssh""
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = ""tcp""
+    cidr_blocks = [""10.0.0.0/8""]
+  }
+}",Medium
+"resource ""aws_iam_policy"" ""readonly_policy"" {
+  name = ""readonly-policy""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = [""s3:GetObject"", ""s3:ListBucket""]
+      Resource = ""arn:aws:s3:::my-specific-bucket/*""
+    }]
+  })
+}",Low
+"resource ""aws_iam_policy"" ""ec2_s3_all"" {
+  name = ""ec2-s3-all""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = [""ec2:*"", ""s3:*""]
+      Resource = ""*""
+    }]
+  })
+}",High
+"resource ""aws_iam_policy"" ""readonly_policy"" {
+  name = ""readonly-policy""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = [""s3:GetObject"", ""s3:ListBucket""]
+      Resource = ""arn:aws:s3:::my-specific-bucket/*""
+    }]
+  })
+}",Low
+"resource ""aws_db_instance"" ""no_encrypt_db"" {
+  identifier      = ""no-encrypt""
+  engine          = ""postgres""
+  instance_class  = ""db.t3.micro""
+  storage_encrypted = false
+  multi_az        = false
+  publicly_accessible = false
+}",Medium
+"resource ""aws_iam_policy"" ""ec2_broad"" {
+  name = ""ec2-broad""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = ""ec2:*""
+      Resource = ""arn:aws:ec2:us-east-1:123456789012:instance/*""
+    }]
+  })
+}",Medium
+"resource ""aws_security_group"" ""open_rdp"" {
+  name = ""open-rdp""
+  ingress {
+    from_port   = 3389
+    to_port     = 3389
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+}",High
+"resource ""aws_security_group"" ""https_restricted"" {
+  name = ""https-only""
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = ""tcp""
+    cidr_blocks = [""10.0.0.0/16""]
+  }
+}",Low
+"resource ""aws_security_group"" ""web_server"" {
+  name = ""web-server""
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+}",Medium
+"resource ""aws_s3_bucket"" ""data_bucket"" {
+  bucket = ""company-data-public""
+  acl    = ""public-read""
+}",High
+"resource ""aws_s3_bucket"" ""public_bucket"" {
+  bucket = ""my-public-bucket""
+}
+resource ""aws_s3_bucket_acl"" ""public_acl"" {
+  bucket = aws_s3_bucket.public_bucket.id
+  acl    = ""public-read-write""
+}",High
+"resource ""aws_iam_policy"" ""cw_logs"" {
+  name = ""cloudwatch-logs-write""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = [""logs:CreateLogStream"", ""logs:PutLogEvents""]
+      Resource = ""arn:aws:logs:us-east-1:123456789012:log-group:/app/prod:*""
+    }]
+  })
+}",Low
+"resource ""aws_s3_bucket"" ""public_bucket"" {
+  bucket = ""my-public-bucket""
+}
+resource ""aws_s3_bucket_acl"" ""public_acl"" {
+  bucket = aws_s3_bucket.public_bucket.id
+  acl    = ""public-read-write""
+}",High
+"resource ""aws_security_group"" ""http_open"" {
+  name = ""http-open""
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+}",Medium
+"resource ""aws_s3_bucket"" ""logs_bucket"" {
+  bucket = ""app-logs-bucket""
+}",Medium
+"resource ""aws_security_group"" ""app_sg"" {
+  name = ""app-sg""
+  ingress {
+    from_port       = 8080
+    to_port         = 8080
+    protocol        = ""tcp""
+    security_groups = [aws_security_group.alb_sg.id]
+  }
+}",Low
+"resource ""aws_db_instance"" ""unsafe_db"" {
+  identifier        = ""unsafe-db""
+  engine            = ""mysql""
+  instance_class    = ""db.t3.micro""
+  publicly_accessible = true
+  storage_encrypted = false
+  username          = ""admin""
+  password          = ""password123""
+}",High
+"resource ""aws_db_instance"" ""pg_unsafe"" {
+  identifier        = ""pg-unsafe""
+  engine            = ""postgres""
+  instance_class    = ""db.t3.small""
+  publicly_accessible = true
+  storage_encrypted = false
+  port              = 5432
+}",High
+"resource ""aws_security_group"" ""all_open"" {
+  name = ""all-open""
+  ingress {
+    from_port   = 0
+    to_port     = 65535
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+}",High
+"resource ""aws_db_instance"" ""replica_db"" {
+  identifier            = ""replica-db""
+  engine                = ""mysql""
+  instance_class        = ""db.t3.medium""
+  publicly_accessible   = false
+  storage_encrypted     = true
+  copy_tags_to_snapshot = true
+}",Low
+"resource ""aws_s3_bucket"" ""logs_bucket"" {
+  bucket = ""app-logs-bucket""
+}",Medium
+"resource ""aws_s3_bucket"" ""internal_logs"" {
+  bucket = ""internal-audit-logs""
+}
+resource ""aws_s3_bucket_acl"" ""private_acl"" {
+  bucket = aws_s3_bucket.internal_logs.id
+  acl    = ""private""
+}",Low
+"resource ""aws_security_group_rule"" ""pg_internal"" {
+  type        = ""ingress""
+  from_port   = 5432
+  to_port     = 5432
+  protocol    = ""tcp""
+  cidr_blocks = [""10.0.0.0/16""]
+  security_group_id = aws_security_group.app_sg.id
+}",Medium
+"resource ""aws_security_group"" ""all_open"" {
+  name = ""all-open""
+  ingress {
+    from_port   = 0
+    to_port     = 65535
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+}",High
+"resource ""aws_iam_policy"" ""admin_policy"" {
+  name = ""admin-policy""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = ""*""
+      Resource = ""*""
+    }]
+  })
+}",High
+"resource ""aws_security_group"" ""app_sg"" {
+  name = ""app-sg""
+  ingress {
+    from_port       = 8080
+    to_port         = 8080
+    protocol        = ""tcp""
+    security_groups = [aws_security_group.alb_sg.id]
+  }
+}",Low
+"resource ""aws_db_instance"" ""prod_db"" {
+  identifier              = ""prod-db""
+  engine                  = ""postgres""
+  engine_version          = ""14.5""
+  instance_class          = ""db.m5.large""
+  publicly_accessible     = false
+  storage_encrypted       = true
+  multi_az                = true
+  deletion_protection     = true
+  backup_retention_period = 30
+}",Low
+"resource ""aws_iam_policy"" ""cw_logs"" {
+  name = ""cloudwatch-logs-write""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = [""logs:CreateLogStream"", ""logs:PutLogEvents""]
+      Resource = ""arn:aws:logs:us-east-1:123456789012:log-group:/app/prod:*""
+    }]
+  })
+}",Low
+"resource ""aws_db_instance"" ""pg_unsafe"" {
+  identifier        = ""pg-unsafe""
+  engine            = ""postgres""
+  instance_class    = ""db.t3.small""
+  publicly_accessible = true
+  storage_encrypted = false
+  port              = 5432
+}",High
+"resource ""aws_iam_policy"" ""ec2_describe"" {
+  name = ""ec2-describe-only""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = [""ec2:DescribeInstances"", ""ec2:DescribeSecurityGroups""]
+      Resource = ""arn:aws:ec2:us-east-1:123456789012:instance/*""
+    }]
+  })
+}",Low
+"resource ""aws_security_group"" ""loose_egress"" {
+  name = ""loose-egress""
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = ""-1""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = ""tcp""
+    cidr_blocks = [""10.0.0.0/16""]
+  }
+}",Medium
+"resource ""aws_security_group_rule"" ""db_vpc_only"" {
+  type        = ""ingress""
+  from_port   = 3306
+  to_port     = 3306
+  protocol    = ""tcp""
+  cidr_blocks = [""172.16.0.0/12""]
+  security_group_id = aws_security_group.db_sg.id
+}",Medium
+"resource ""aws_iam_policy"" ""s3_specific"" {
+  name = ""s3-specific-wildcard""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = ""s3:*""
+      Resource = ""arn:aws:s3:::my-bucket/*""
+    }]
+  })
+}",Medium
+"resource ""aws_security_group"" ""office_ssh"" {
+  name = ""office-ssh""
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = ""tcp""
+    cidr_blocks = [""10.0.0.0/8""]
+  }
+}",Medium
+"resource ""aws_security_group_rule"" ""pg_internal"" {
+  type        = ""ingress""
+  from_port   = 5432
+  to_port     = 5432
+  protocol    = ""tcp""
+  cidr_blocks = [""10.0.0.0/16""]
+  security_group_id = aws_security_group.app_sg.id
+}",Medium
+"resource ""aws_security_group"" ""egress_only_https"" {
+  name = ""egress-only-https""
+  egress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+}",Low
+"resource ""aws_iam_policy"" ""dynamo_scoped"" {
+  name = ""dynamo-scoped""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = [""dynamodb:GetItem"", ""dynamodb:PutItem"", ""dynamodb:Query""]
+      Resource = ""arn:aws:dynamodb:us-east-1:123456789012:table/MyTable""
+    }]
+  })
+}",Low
+"resource ""aws_security_group_rule"" ""db_open"" {
+  type        = ""ingress""
+  from_port   = 3306
+  to_port     = 3306
+  protocol    = ""tcp""
+  cidr_blocks = [""0.0.0.0/0""]
+  security_group_id = aws_security_group.db_sg.id
+}",High
+"resource ""aws_security_group_rule"" ""rdp_rule"" {
+  type              = ""ingress""
+  from_port         = 3389
+  to_port           = 3389
+  protocol          = ""tcp""
+  cidr_blocks       = [""0.0.0.0/0""]
+  security_group_id = aws_security_group.example.id
+}",High
+"resource ""aws_s3_bucket"" ""logs_bucket"" {
+  bucket = ""app-logs-bucket""
+}",Medium
+"resource ""aws_security_group"" ""db_private"" {
+  name = ""db-private""
+  ingress {
+    from_port       = 5432
+    to_port         = 5432
+    protocol        = ""tcp""
+    security_groups = [aws_security_group.app_sg.id]
+  }
+}",Low
+"resource ""aws_security_group"" ""db_private"" {
+  name = ""db-private""
+  ingress {
+    from_port       = 5432
+    to_port         = 5432
+    protocol        = ""tcp""
+    security_groups = [aws_security_group.app_sg.id]
+  }
+}",Low
+"resource ""aws_db_instance"" ""safe_db"" {
+  identifier           = ""safe-db""
+  engine               = ""mysql""
+  instance_class       = ""db.t3.micro""
+  publicly_accessible  = false
+  storage_encrypted    = true
+  multi_az             = true
+  backup_retention_period = 7
+}",Low
+"resource ""aws_security_group"" ""all_open"" {
+  name = ""all-open""
+  ingress {
+    from_port   = 0
+    to_port     = 65535
+    protocol    = ""tcp""
+    cidr_blocks = [""0.0.0.0/0""]
+  }
+}",High
+"resource ""aws_db_instance"" ""no_backup"" {
+  identifier         = ""no-backup""
+  engine             = ""mysql""
+  instance_class     = ""db.t3.micro""
+  backup_retention_period = 0
+  storage_encrypted  = false
+  publicly_accessible = false
+}",Medium
+"resource ""aws_security_group_rule"" ""rdp_internal"" {
+  type        = ""ingress""
+  from_port   = 3389
+  to_port     = 3389
+  protocol    = ""tcp""
+  cidr_blocks = [""192.168.0.0/16""]
+  security_group_id = aws_security_group.windows.id
+}",Medium
+"resource ""aws_db_instance"" ""no_encrypt_db"" {
+  identifier      = ""no-encrypt""
+  engine          = ""postgres""
+  instance_class  = ""db.t3.micro""
+  storage_encrypted = false
+  multi_az        = false
+  publicly_accessible = false
+}",Medium
+"resource ""aws_s3_bucket"" ""private_bucket"" {
+  bucket = ""my-private-bucket""
+}
+resource ""aws_s3_bucket_public_access_block"" ""block"" {
+  bucket                  = aws_s3_bucket.private_bucket.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}",Low
+"resource ""aws_iam_policy"" ""dynamo_scoped"" {
+  name = ""dynamo-scoped""
+  policy = jsonencode({
+    Version = ""2012-10-17""
+    Statement = [{
+      Effect   = ""Allow""
+      Action   = [""dynamodb:GetItem"", ""dynamodb:PutItem"", ""dynamodb:Query""]
+      Resource = ""arn:aws:dynamodb:us-east-1:123456789012:table/MyTable""
+    }]
+  })
+}",Low
